@@ -1,0 +1,611 @@
+openapi: 3.0.3
+info:
+  title: Go Blog API
+  version: "1.0"
+servers:
+- url: /
+paths:
+  /posts/{slug}:
+    delete:
+      parameters:
+      - description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        examples:
+          firstExample:
+            value: the-first-blog-post
+          secondExample:
+            value: the-second-blog-post
+        explode: false
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: OK
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Access denied.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Post not found.
+      summary: Delete a post
+    get:
+      parameters:
+      - description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        examples:
+          firstExample:
+            value: the-first-blog-post
+          secondExample:
+            value: the-second-blog-post
+        explode: false
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Post not found
+      summary: Returns a post's details
+    post:
+      parameters:
+      - description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        examples:
+          firstExample:
+            value: the-first-blog-post
+          secondExample:
+            value: the-second-blog-post
+        explode: false
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: OK
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: A post with that slug is existed.
+      summary: Create a post
+    put:
+      parameters:
+      - description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        examples:
+          firstExample:
+            value: the-first-blog-post
+          secondExample:
+            value: the-second-blog-post
+        explode: false
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: OK
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Access denied.
+      summary: Edit a post
+  /postsAll:
+    get:
+      parameters:
+      - description: |
+          Sort the returned result. Sorting occurs before pagination.
+
+          By default, posts are sorted by publication date in descending order.
+        examples:
+          sortByDateAscending:
+            value: publicationDate_ASC
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          $ref: '#/components/schemas/sort'
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Post'
+                type: array
+          description: OK
+      summary: Returns all blog posts
+  /posts:
+    get:
+      parameters:
+      - description: The page number to query if a query needs pagination.
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+        style: form
+      - description: The number of items in a page if a query needs pagination.
+        explode: true
+        in: query
+        name: pageSize
+        required: false
+        schema:
+          default: 10
+          minimum: 1
+          type: integer
+        style: form
+      - description: |
+          Sort the returned result. Sorting occurs before pagination.
+
+          By default, posts are sorted by publication date in descending order.
+        examples:
+          sortByDateAscending:
+            value: publicationDate_ASC
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          $ref: '#/components/schemas/sort'
+        style: form
+      responses:
+        "200":
+          description: OK
+      summary: Returns a list of blog posts
+  /pages/{slug}:
+    delete:
+      parameters:
+      - description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        examples:
+          firstExample:
+            value: the-first-blog-post
+          secondExample:
+            value: the-second-blog-post
+        explode: false
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+          description: OK
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Access denied.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Page not found.
+      summary: Delete a page
+    get:
+      parameters:
+      - description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        examples:
+          firstExample:
+            value: the-first-blog-post
+          secondExample:
+            value: the-second-blog-post
+        explode: false
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Page not found
+      summary: Returns a page's details
+    post:
+      parameters:
+      - description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        examples:
+          firstExample:
+            value: the-first-blog-post
+          secondExample:
+            value: the-second-blog-post
+        explode: false
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Page'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+          description: OK
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: A page with that slug is existed.
+      summary: Create a page
+    put:
+      parameters:
+      - description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        examples:
+          firstExample:
+            value: the-first-blog-post
+          secondExample:
+            value: the-second-blog-post
+        explode: false
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Page'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+          description: OK
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Access denied.
+      summary: Edit a page
+  /pagesAll:
+    get:
+      parameters:
+      - description: |
+          Sort the returned result. Sorting occurs before pagination.
+
+          By default, posts are sorted by publication date in descending order.
+        examples:
+          sortByDateAscending:
+            value: publicationDate_ASC
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          $ref: '#/components/schemas/sort'
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Page'
+                type: array
+          description: OK
+      summary: Returns all pages
+  /navs:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Page'
+                type: array
+          description: OK
+      summary: Returns an array of pages on the navigation bar.
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                type: integer
+              type: array
+        description: An array of page ids.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Page'
+                type: array
+          description: OK
+      summary: Modify the navigation bar's pages.
+components:
+  parameters:
+    slug:
+      description: |
+        A slug is a lowercase hyphen-separated string that represents a blog
+        post/page, sort of like an ID.
+
+        A slug must be unique.
+      examples:
+        firstExample:
+          value: the-first-blog-post
+        secondExample:
+          value: the-second-blog-post
+      explode: false
+      in: path
+      name: slug
+      required: true
+      schema:
+        type: string
+      style: simple
+    page:
+      description: The page number to query if a query needs pagination.
+      explode: true
+      in: query
+      name: page
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+      style: form
+    pageSize:
+      description: The number of items in a page if a query needs pagination.
+      explode: true
+      in: query
+      name: pageSize
+      required: false
+      schema:
+        default: 10
+        minimum: 1
+        type: integer
+      style: form
+    sort:
+      description: |
+        Sort the returned result. Sorting occurs before pagination.
+
+        By default, posts are sorted by publication date in descending order.
+      examples:
+        sortByDateAscending:
+          value: publicationDate_ASC
+      explode: true
+      in: query
+      name: sort
+      required: false
+      schema:
+        $ref: '#/components/schemas/sort'
+      style: form
+  schemas:
+    sort:
+      description: |
+        Sort by a field in ascending (ASC) or descending (DESC) order.
+      example: fieldName_DESC
+      pattern: /^.+_(ASC|DESC)$/i
+      type: string
+    Post:
+      allOf:
+      - $ref: '#/components/schemas/Page'
+      - $ref: '#/components/schemas/Post_allOf'
+      type: object
+    errorResponse:
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+      required:
+      - message
+      - status
+      type: object
+    Page:
+      example:
+        title: title
+        excerpt: excerpt
+        publicationDate: 2000-01-23T04:56:07.000+00:00
+        slug: slug
+        authors:
+        - fullName: fullName
+          bio: bio
+          id: 0
+          email: email
+        - fullName: fullName
+          bio: bio
+          id: 0
+          email: email
+      properties:
+        slug:
+          type: string
+        authors:
+          items:
+            $ref: '#/components/schemas/Author'
+          type: array
+        title:
+          type: string
+        excerpt:
+          type: string
+        publicationDate:
+          format: date-time
+          type: string
+      type: object
+    User:
+      properties:
+        userId:
+          description: |
+            This field is the `sub` claim in the OpenID Connect's JWT.
+          type: string
+      required:
+      - userId
+      type: object
+    Author:
+      example:
+        fullName: fullName
+        bio: bio
+        id: 0
+        email: email
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        email:
+          type: string
+        bio:
+          type: string
+      required:
+      - bio
+      - email
+      - fullName
+      type: object
+    Config:
+      properties:
+        blogName:
+          description: |
+            Blog name, for showing the text in various places, i.e. the Home nav
+            link.
+          type: string
+        postsOnHomePage:
+          default: 10
+          description: Number of posts on the home page.
+          type: integer
+        postsPerArchivePage:
+          default: 10
+          description: Number of posts in an archive page, for pagination.
+          type: integer
+        bannerUrl:
+          description: |
+            URL to the banner image that shows when the home page is shared on
+            social platforms.
+          type: string
+        blogDescription:
+          description: |
+            Blog description to use as the description meta for the blog.
+          type: string
+        copyright:
+          $ref: '#/components/schemas/Config_copyright'
+      type: object
+    Post_allOf:
+      properties:
+        coverUrl:
+          type: string
+        lastPostSlug:
+          nullable: true
+          type: string
+        nextPostSlug:
+          nullable: true
+          type: string
+    Config_copyright:
+      properties:
+        from:
+          type: integer
+        company:
+          type: string
+      type: object
