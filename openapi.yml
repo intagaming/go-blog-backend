@@ -257,11 +257,11 @@ components:
         - properties:
             coverUrl:
               type: string
-            lastPostId:
-              type: integer
+            lastPostSlug:
+              type: string
               nullable: true
-            nextPostId:
-              type: integer
+            nextPostSlug:
+              type: string
               nullable: true
     errorResponse:
       type: object
