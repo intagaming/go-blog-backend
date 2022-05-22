@@ -88,10 +88,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/errorResponse"
-  /postsAll:
+  /posts:
     get:
       summary: Returns all blog posts
       parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/pageSize"
         - $ref: "#/components/parameters/sort"
       responses:
         "200":
@@ -102,16 +104,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Post"
-  /posts:
-    get:
-      summary: Returns a list of blog posts
-      parameters:
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/pageSize"
-        - $ref: "#/components/parameters/sort"
-      responses:
-        "200":
-          description: OK
   /pages/{slug}:
     get:
       summary: Returns a page's details
@@ -197,7 +189,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/errorResponse"
-  /pagesAll:
+  /pages:
     get:
       summary: Returns all pages
       parameters:

@@ -12,19 +12,12 @@ package main
 import (
 	"database/sql"
 	"log"
+	"net/http"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
-
-	// WARNING!
-	// Change this to a fully-qualified import path
-	// once you place this file into your project.
-	// For example,
-	//
-	//sw "github.com/GIT_USER_ID/GIT_REPO_ID/go"
-	//
-	sw "hxann.com/blog/go"
+	"hxann.com/blog/blog"
 )
 
 func main() {
@@ -45,11 +38,11 @@ func main() {
 	}
 	log.Printf("Database connected.")
 
-	env := sw.GenerateEnv(db)
+	// env := sw.GenerateEnv(db)
 
-	log.Printf("Server started")
+	r := blog.NewRouter(db)
 
-	router := sw.NewRouter(env)
+	log.Print("Server started")
 
-	log.Fatal(router.Run(":8080"))
+	http.ListenAndServe(":8080", r)
 }
