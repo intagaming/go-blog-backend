@@ -50,11 +50,6 @@ func PagesSlugPut(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-// PostsAllGet - Returns all blog posts
-func PostsAllGet(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
-}
-
 // PostsGet - Returns a list of blog posts
 func PostsGet(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})

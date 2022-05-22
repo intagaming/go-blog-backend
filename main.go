@@ -10,7 +10,12 @@
 package main
 
 import (
+	"database/sql"
 	"log"
+	"os"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 
 	// WARNING!
 	// Change this to a fully-qualified import path
@@ -23,9 +28,28 @@ import (
 )
 
 func main() {
+	log.Printf("Initializing...")
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	db, err := sql.Open("mysql", os.Getenv("DSN"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Database connected.")
+
+	env := sw.GenerateEnv(db)
+
 	log.Printf("Server started")
 
-	router := sw.NewRouter()
+	router := sw.NewRouter(env)
 
 	log.Fatal(router.Run(":8080"))
 }

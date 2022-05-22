@@ -18,11 +18,11 @@ import (
 // Route is the information for every URI.
 type Route struct {
 	// Name is the name of this Route.
-	Name        string
+	Name string
 	// Method is the string for the HTTP method. ex) GET, POST etc..
-	Method      string
+	Method string
 	// Pattern is the pattern of the URI.
-	Pattern     string
+	Pattern string
 	// HandlerFunc is the handler function of this route.
 	HandlerFunc gin.HandlerFunc
 }
@@ -31,9 +31,10 @@ type Route struct {
 type Routes []Route
 
 // NewRouter returns a new router.
-func NewRouter() *gin.Engine {
+func NewRouter(env *Env) *gin.Engine {
 	router := gin.Default()
-	for _, route := range routes {
+
+	for _, route := range *generateRoutes(env) {
 		switch route.Method {
 		case http.MethodGet:
 			router.GET(route.Pattern, route.HandlerFunc)
@@ -56,102 +57,104 @@ func Index(c *gin.Context) {
 	c.String(http.StatusOK, "Hello World!")
 }
 
-var routes = Routes{
-	{
-		"Index",
-		http.MethodGet,
-		"/",
-		Index,
-	},
+func generateRoutes(env *Env) *Routes {
+	return &Routes{
+		{
+			"Index",
+			http.MethodGet,
+			"/",
+			Index,
+		},
 
-	{
-		"NavsGet",
-		http.MethodGet,
-		"/navs",
-		NavsGet,
-	},
+		{
+			"NavsGet",
+			http.MethodGet,
+			"/navs",
+			NavsGet,
+		},
 
-	{
-		"NavsPut",
-		http.MethodPut,
-		"/navs",
-		NavsPut,
-	},
+		{
+			"NavsPut",
+			http.MethodPut,
+			"/navs",
+			NavsPut,
+		},
 
-	{
-		"PagesAllGet",
-		http.MethodGet,
-		"/pagesAll",
-		PagesAllGet,
-	},
+		{
+			"PagesAllGet",
+			http.MethodGet,
+			"/pagesAll",
+			PagesAllGet,
+		},
 
-	{
-		"PagesSlugDelete",
-		http.MethodDelete,
-		"/pages/:slug",
-		PagesSlugDelete,
-	},
+		{
+			"PagesSlugDelete",
+			http.MethodDelete,
+			"/pages/:slug",
+			PagesSlugDelete,
+		},
 
-	{
-		"PagesSlugGet",
-		http.MethodGet,
-		"/pages/:slug",
-		PagesSlugGet,
-	},
+		{
+			"PagesSlugGet",
+			http.MethodGet,
+			"/pages/:slug",
+			PagesSlugGet,
+		},
 
-	{
-		"PagesSlugPost",
-		http.MethodPost,
-		"/pages/:slug",
-		PagesSlugPost,
-	},
+		{
+			"PagesSlugPost",
+			http.MethodPost,
+			"/pages/:slug",
+			PagesSlugPost,
+		},
 
-	{
-		"PagesSlugPut",
-		http.MethodPut,
-		"/pages/:slug",
-		PagesSlugPut,
-	},
+		{
+			"PagesSlugPut",
+			http.MethodPut,
+			"/pages/:slug",
+			PagesSlugPut,
+		},
 
-	{
-		"PostsAllGet",
-		http.MethodGet,
-		"/postsAll",
-		PostsAllGet,
-	},
+		{
+			"PostsAllGet",
+			http.MethodGet,
+			"/postsAll",
+			env.PostsAllGet,
+		},
 
-	{
-		"PostsGet",
-		http.MethodGet,
-		"/posts",
-		PostsGet,
-	},
+		{
+			"PostsGet",
+			http.MethodGet,
+			"/posts",
+			PostsGet,
+		},
 
-	{
-		"PostsSlugDelete",
-		http.MethodDelete,
-		"/posts/:slug",
-		PostsSlugDelete,
-	},
+		{
+			"PostsSlugDelete",
+			http.MethodDelete,
+			"/posts/:slug",
+			PostsSlugDelete,
+		},
 
-	{
-		"PostsSlugGet",
-		http.MethodGet,
-		"/posts/:slug",
-		PostsSlugGet,
-	},
+		{
+			"PostsSlugGet",
+			http.MethodGet,
+			"/posts/:slug",
+			PostsSlugGet,
+		},
 
-	{
-		"PostsSlugPost",
-		http.MethodPost,
-		"/posts/:slug",
-		PostsSlugPost,
-	},
+		{
+			"PostsSlugPost",
+			http.MethodPost,
+			"/posts/:slug",
+			PostsSlugPost,
+		},
 
-	{
-		"PostsSlugPut",
-		http.MethodPut,
-		"/posts/:slug",
-		PostsSlugPut,
-	},
+		{
+			"PostsSlugPut",
+			http.MethodPut,
+			"/posts/:slug",
+			PostsSlugPut,
+		},
+	}
 }
