@@ -9,9 +9,11 @@
 
 package openapi
 
+// Author - Author is an User that can author their posts.
 type Author struct {
 
-	Id int32 `json:"id,omitempty"`
+	// This field is the `sub` claim in the OpenID Connect's JWT. 
+	UserId string `json:"userId"`
 
 	FullName string `json:"fullName"`
 

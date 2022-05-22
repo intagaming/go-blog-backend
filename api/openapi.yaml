@@ -160,10 +160,10 @@ paths:
       - description: |
           Sort the returned result. Sorting occurs before pagination.
 
-          By default, posts are sorted by publication date in descending order.
+          By default, posts are sorted by publishedAt in descending order.
         examples:
           sortByDateAscending:
-            value: publicationDate_ASC
+            value: publishedAt_ASC
         explode: true
         in: query
         name: sort
@@ -206,10 +206,10 @@ paths:
       - description: |
           Sort the returned result. Sorting occurs before pagination.
 
-          By default, posts are sorted by publication date in descending order.
+          By default, posts are sorted by publishedAt in descending order.
         examples:
           sortByDateAscending:
-            value: publicationDate_ASC
+            value: publishedAt_ASC
         explode: true
         in: query
         name: sort
@@ -376,10 +376,10 @@ paths:
       - description: |
           Sort the returned result. Sorting occurs before pagination.
 
-          By default, posts are sorted by publication date in descending order.
+          By default, posts are sorted by publishedAt in descending order.
         examples:
           sortByDateAscending:
-            value: publicationDate_ASC
+            value: publishedAt_ASC
         explode: true
         in: query
         name: sort
@@ -473,10 +473,10 @@ components:
       description: |
         Sort the returned result. Sorting occurs before pagination.
 
-        By default, posts are sorted by publication date in descending order.
+        By default, posts are sorted by publishedAt in descending order.
       examples:
         sortByDateAscending:
-          value: publicationDate_ASC
+          value: publishedAt_ASC
       explode: true
       in: query
       name: sort
@@ -508,19 +508,13 @@ components:
       type: object
     Page:
       example:
+        publishedAt: 2000-01-23T04:56:07.000+00:00
         title: title
         excerpt: excerpt
-        publicationDate: 2000-01-23T04:56:07.000+00:00
         slug: slug
         authors:
-        - fullName: fullName
-          bio: bio
-          id: 0
-          email: email
-        - fullName: fullName
-          bio: bio
-          id: 0
-          email: email
+        - null
+        - null
       properties:
         slug:
           type: string
@@ -532,7 +526,7 @@ components:
           type: string
         excerpt:
           type: string
-        publicationDate:
+        publishedAt:
           format: date-time
           type: string
       type: object
@@ -546,20 +540,10 @@ components:
       - userId
       type: object
     Author:
-      example:
-        fullName: fullName
-        bio: bio
-        id: 0
-        email: email
-      properties:
-        id:
-          type: integer
-        fullName:
-          type: string
-        email:
-          type: string
-        bio:
-          type: string
+      allOf:
+      - $ref: '#/components/schemas/User'
+      - $ref: '#/components/schemas/Author_allOf'
+      description: Author is an User that can author their posts.
       required:
       - bio
       - email
@@ -601,6 +585,14 @@ components:
           type: string
         nextPostSlug:
           nullable: true
+          type: string
+    Author_allOf:
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        bio:
           type: string
     Config_copyright:
       properties:

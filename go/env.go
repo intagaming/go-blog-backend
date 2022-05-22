@@ -7,11 +7,13 @@ import (
 )
 
 type Env struct {
-	posts models.PostModel
+	posts   models.PostModel
+	authors models.AuthorModel
 }
 
 func GenerateEnv(db *sql.DB) *Env {
 	return &Env{
-		posts: models.PostModel{DB: db},
+		posts:   models.PostModel{DB: db},
+		authors: models.AuthorModel{DB: db},
 	}
 }

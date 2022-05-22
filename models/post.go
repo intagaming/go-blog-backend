@@ -20,7 +20,7 @@ func (m PostModel) All() ([]Post, error) {
 	rows, err := m.DB.Query(`
 		SELECT slug, title, excerpt, content, published_at
 		FROM posts
-		LEFT JOIN posts_publication ON slug = posts.slug`)
+		LEFT JOIN posts_publication ON posts_publication.post_slug = posts.slug`)
 	if err != nil {
 		return nil, err
 	}

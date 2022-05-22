@@ -23,5 +23,5 @@ type Page struct {
 
 	Excerpt string `json:"excerpt,omitempty"`
 
-	PublicationDate time.Time `json:"publicationDate,omitempty"`
+	PublishedAt time.Time `json:"publishedAt,omitempty"`
 }

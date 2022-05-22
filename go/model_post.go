@@ -14,7 +14,6 @@ import (
 )
 
 type Post struct {
-
 	Slug string `json:"slug,omitempty"`
 
 	Authors []Author `json:"authors,omitempty"`
@@ -23,7 +22,7 @@ type Post struct {
 
 	Excerpt string `json:"excerpt,omitempty"`
 
-	PublicationDate time.Time `json:"publicationDate,omitempty"`
+	PublishedAt *time.Time `json:"publishedAt,omitempty"`
 
 	CoverUrl string `json:"coverUrl,omitempty"`
 

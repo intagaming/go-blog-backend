@@ -286,7 +286,7 @@ components:
           type: string
         excerpt:
           type: string
-        publicationDate:
+        publishedAt:
           type: string
           format: date-time
     User:
@@ -300,15 +300,16 @@ components:
         - "userId"
     Author:
       type: object
-      properties:
-        id:
-          type: integer
-        fullName:
-          type: string
-        email:
-          type: string
-        bio:
-          type: string
+      description: Author is an User that can author their posts.
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - properties:
+            fullName:
+              type: string
+            email:
+              type: string
+            bio:
+              type: string
       required:
         - "fullName"
         - "email"
@@ -383,9 +384,9 @@ components:
       description: |
         Sort the returned result. Sorting occurs before pagination.
 
-        By default, posts are sorted by publication date in descending order.
+        By default, posts are sorted by publishedAt in descending order.
       schema:
         $ref: "#/components/schemas/sort"
       examples:
         sortByDateAscending:
-          value: "publicationDate_ASC"
+          value: "publishedAt_ASC"
