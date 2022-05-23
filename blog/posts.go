@@ -1,6 +1,7 @@
 package blog
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -25,19 +26,61 @@ func (env *Env) PostsGet(w http.ResponseWriter, r *http.Request) {
 	render.RenderList(w, r, postsResp)
 }
 
+func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
+	data := &PostRequest{}
+	if err := render.Bind(r, data); err != nil {
+		render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	post := data.Post
+
+	// Check required fields
+	if post.Slug == "" || post.Title == "" || post.Excerpt == "" ||
+		post.Content == "" {
+		render.Render(w, r, ErrInvalidRequest(errors.New("some of the required fields are not present. Required fields: slug, title, excerpt, content")))
+		return
+	}
+
+	if err := env.posts.Add(post); err != nil {
+		render.Render(w, r, ErrInternal(err))
+		return
+	}
+
+	resp, err := NewPostResponse(post, env)
+	if err != nil {
+		render.Render(w, r, ErrInternal(err))
+		return
+	}
+
+	render.Status(r, http.StatusCreated)
+	render.Render(w, r, resp)
+}
+
+type PostRequest struct {
+	*models.Post
+}
+
+func (pr *PostRequest) Bind(r *http.Request) error {
+	if pr.Post == nil {
+		return errors.New("missing required Post fields")
+	}
+
+	return nil
+}
+
 type PostResponse struct {
 	*models.Post
-	PublishedAt string            `json:"published_at"`
+	PublishedAt string            `json:"published_at,omitempty"`
 	Authors     []*AuthorResponse `json:"authors"`
 	// TODO: coverUrl, lastPostSlug, nextPostSlug
 }
 
 func (resp *PostResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	time, err := resp.Post.PublishedAt.Time()
-	if err != nil {
-		return err
+	if resp.Post.PublishedAt != nil {
+		resp.PublishedAt = resp.Post.PublishedAt.Format("2006-01-02 15:04:05")
 	}
-	resp.PublishedAt = time.Format("2006-01-02 15:04:05")
+
 	return nil
 }
 

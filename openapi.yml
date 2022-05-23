@@ -14,7 +14,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
+                $ref: "#/components/schemas/PostResponse"
         "404":
           description: Post not found
           content:
@@ -36,7 +36,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
+                $ref: "#/components/schemas/PostResponse"
         "403":
           description: A post with that slug is existed.
           content:
@@ -58,7 +58,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
+                $ref: "#/components/schemas/PostResponse"
         "403":
           description: Access denied.
           content:
@@ -75,7 +75,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
+                $ref: "#/components/schemas/PostResponse"
         "403":
           description: Access denied.
           content:
@@ -103,7 +103,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Post"
+                  $ref: "#/components/schemas/PostResponse"
   /pages/{slug}:
     get:
       summary: Returns a page's details
@@ -115,7 +115,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Page"
+                $ref: "#/components/schemas/PageResponse"
         "404":
           description: Page not found
           content:
@@ -137,7 +137,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Page"
+                $ref: "#/components/schemas/PageResponse"
         "403":
           description: A page with that slug is existed.
           content:
@@ -159,7 +159,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Page"
+                $ref: "#/components/schemas/PageResponse"
         "403":
           description: Access denied.
           content:
@@ -176,7 +176,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Page"
+                $ref: "#/components/schemas/PageResponse"
         "403":
           description: Access denied.
           content:
@@ -202,7 +202,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Page"
+                  $ref: "#/components/schemas/PageResponse"
 components:
   schemas:
     sort:
@@ -218,6 +218,11 @@ components:
         - properties:
             coverUrl:
               type: string
+    PostResponse:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Post"
+        - properties:
             lastPostSlug:
               type: string
               nullable: true
@@ -247,9 +252,16 @@ components:
           type: string
         excerpt:
           type: string
+        published:
+          type: boolean
         publishedAt:
           type: string
           format: date-time
+    PageResponse:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Page"
+        - properties: {}
     User:
       type: object
       properties:

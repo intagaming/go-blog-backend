@@ -22,7 +22,22 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		w.Write([]byte("hello world"))
 	})
 
-	r.Get("/posts", env.PostsGet)
+	r.Route("/posts", func(r chi.Router) {
+		r.Get("/", env.PostsGet)
+		r.Post("/", env.PostsPost)
+	})
 
 	return r
+}
+
+func init() {
+	render.Respond = func(w http.ResponseWriter, r *http.Request, v interface{}) {
+		if err, ok := v.(*ErrorResponse); ok {
+			if err.Status == http.StatusInternalServerError {
+				panic(err.Err)
+			}
+		}
+
+		render.DefaultResponder(w, r, v)
+	}
 }
