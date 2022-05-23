@@ -203,37 +203,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Page"
-  /navs:
-    get:
-      summary: Returns an array of pages on the navigation bar.
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Page"
-    put:
-      summary: Modify the navigation bar's pages.
-      requestBody:
-        description: An array of page ids.
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Page"
 components:
   schemas:
     sort:
@@ -306,38 +275,6 @@ components:
         - "fullName"
         - "email"
         - "bio"
-    Config:
-      type: object
-      properties:
-        blogName:
-          type: string
-          description: |
-            Blog name, for showing the text in various places, i.e. the Home nav
-            link.
-        postsOnHomePage:
-          type: integer
-          default: 10
-          description: Number of posts on the home page.
-        postsPerArchivePage:
-          type: integer
-          default: 10
-          description: Number of posts in an archive page, for pagination.
-        bannerUrl:
-          type: string
-          description: |
-            URL to the banner image that shows when the home page is shared on
-            social platforms.
-        blogDescription:
-          type: string
-          description: |
-            Blog description to use as the description meta for the blog.
-        copyright:
-          type: object
-          properties:
-            from:
-              type: integer
-            company:
-              type: string
   parameters:
     slug:
       name: slug
