@@ -29,15 +29,3 @@ func NewRouter(db *sql.DB) *chi.Mux {
 
 	return r
 }
-
-func init() {
-	render.Respond = func(w http.ResponseWriter, r *http.Request, v interface{}) {
-		if err, ok := v.(*ErrorResponse); ok {
-			if err.Status == http.StatusInternalServerError {
-				panic(err.Err)
-			}
-		}
-
-		render.DefaultResponder(w, r, v)
-	}
-}

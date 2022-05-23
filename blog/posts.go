@@ -14,13 +14,13 @@ func (env *Env) PostsGet(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		render.Render(w, r, ErrInternal(err))
-		return
+		panic(err)
 	}
 
 	postsResp, err := NewPostListResponse(modelPosts, env)
 	if err != nil {
 		render.Render(w, r, ErrInternal(err))
-		return
+		panic(err)
 	}
 
 	render.RenderList(w, r, postsResp)
@@ -44,13 +44,13 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := env.posts.Add(post); err != nil {
 		render.Render(w, r, ErrInternal(err))
-		return
+		panic(err)
 	}
 
 	resp, err := NewPostResponse(post, env)
 	if err != nil {
 		render.Render(w, r, ErrInternal(err))
-		return
+		panic(err)
 	}
 
 	render.Status(r, http.StatusCreated)
