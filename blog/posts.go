@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/go-sql-driver/mysql"
 	"hxann.com/blog/models"
 )
 
@@ -46,6 +47,12 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := env.posts.Add(post); err != nil {
+		if driverErr, ok := err.(*mysql.MySQLError); ok {
+			if driverErr.Number == 1062 {
+				render.Render(w, r, ErrDuplicate(err))
+				return
+			}
+		}
 		render.Render(w, r, ErrInternal(err))
 		panic(err)
 	}

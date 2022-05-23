@@ -33,6 +33,14 @@ func ErrInvalidRequest(err error) render.Renderer {
 	}
 }
 
+func ErrDuplicate(err error) render.Renderer {
+	return &ErrorResponse{
+		Err:     err,
+		Status:  http.StatusConflict,
+		Message: "Entity existed.",
+	}
+}
+
 var ErrNotFound = &ErrorResponse{
 	Status:  http.StatusNotFound,
 	Message: "Resource not found.",
