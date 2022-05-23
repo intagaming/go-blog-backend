@@ -104,6 +104,18 @@ func (env *Env) PostGet(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, resp)
 }
 
+func (env *Env) PostDelete(w http.ResponseWriter, r *http.Request) {
+	post := r.Context().Value(postCtxKey{}).(*models.Post)
+
+	err := env.posts.Delete(post.Slug)
+	if err != nil {
+		render.Render(w, r, ErrInternal(err))
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 type PostRequest struct {
 	*models.Post
 }

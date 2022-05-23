@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -123,5 +124,22 @@ func (m PostModel) Add(post *Post) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (m PostModel) Delete(slug string) error {
+	res, err := m.DB.Exec(`DELETE FROM posts WHERE slug = ?`, slug)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errors.New("no post were deleted")
+	}
+
 	return nil
 }
