@@ -1,0 +1,342 @@
+_id: spc_86e774a1e6ff43c8918550182f0d84f8
+type: ApiSpec
+parentId: wrk_b1e40fe420634d7f81d7a1b14c6ab272
+modified: 1653316265370
+created: 1653315558556
+fileName: Blog Document
+contents: >
+  openapi: "3.0.3"
+
+  info:
+    title: Go Blog API
+    version: "1.0"
+  paths:
+    /posts/{slug}:
+      get:
+        summary: Returns a post's details
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PostResponse"
+          "404":
+            description: Post not found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+      post:
+        summary: Create a post
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PostResponse"
+          "403":
+            description: A post with that slug is existed.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+      put:
+        summary: Edit a post
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PostResponse"
+          "403":
+            description: Access denied.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+      delete:
+        summary: Delete a post
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PostResponse"
+          "403":
+            description: Access denied.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+          "404":
+            description: Post not found.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+    /posts:
+      get:
+        summary: Returns all blog posts
+        parameters:
+          - $ref: "#/components/parameters/page"
+          - $ref: "#/components/parameters/pageSize"
+          - $ref: "#/components/parameters/sort"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PostResponse"
+    /pages/{slug}:
+      get:
+        summary: Returns a page's details
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PageResponse"
+          "404":
+            description: Page not found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+      post:
+        summary: Create a page
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PageResponse"
+          "403":
+            description: A page with that slug is existed.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+      put:
+        summary: Edit a page
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PageResponse"
+          "403":
+            description: Access denied.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+      delete:
+        summary: Delete a page
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PageResponse"
+          "403":
+            description: Access denied.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+          "404":
+            description: Page not found.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+    /pages:
+      get:
+        summary: Returns all pages
+        parameters:
+          - $ref: "#/components/parameters/sort"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PageResponse"
+  components:
+    schemas:
+      sort:
+        type: string
+        description: |
+          Sort by a field in ascending (ASC) or descending (DESC) order.
+        pattern: "^.+_(ASC|DESC)$"
+        example: "fieldName_DESC"
+      Post:
+        type: object
+        allOf:
+          - $ref: "#/components/schemas/Page"
+          - properties:
+              coverUrl:
+                type: string
+      PostResponse:
+        type: object
+        allOf:
+          - $ref: "#/components/schemas/Post"
+          - properties:
+              lastPostSlug:
+                type: string
+                nullable: true
+              nextPostSlug:
+                type: string
+                nullable: true
+      errorResponse:
+        type: object
+        properties:
+          status:
+            type: integer
+          message:
+            type: string
+        required:
+          - "status"
+          - "message"
+      Page:
+        type: object
+        properties:
+          slug:
+            type: string
+          authors:
+            type: array
+            items:
+              $ref: "#/components/schemas/Author"
+          title:
+            type: string
+          excerpt:
+            type: string
+          published:
+            type: boolean
+          publishedAt:
+            type: string
+            format: date-time
+      PageResponse:
+        type: object
+        allOf:
+          - $ref: "#/components/schemas/Page"
+          - properties: {}
+      User:
+        type: object
+        properties:
+          userId:
+            type: string
+            description: |
+              This field is the `sub` claim in the OpenID Connect's JWT.
+        required:
+          - "userId"
+      Author:
+        type: object
+        description: Author is an User that can author their posts.
+        allOf:
+          - $ref: "#/components/schemas/User"
+          - properties:
+              fullName:
+                type: string
+              email:
+                type: string
+              bio:
+                type: string
+        required:
+          - "fullName"
+          - "email"
+          - "bio"
+    parameters:
+      slug:
+        name: slug
+        in: path
+        required: true
+        description: |
+          A slug is a lowercase hyphen-separated string that represents a blog
+          post/page, sort of like an ID.
+
+          A slug must be unique.
+        schema:
+          type: string
+        examples:
+          firstExample:
+            value: "the-first-blog-post"
+          secondExample:
+            value: "the-second-blog-post"
+      page:
+        name: page
+        in: query
+        description: "The page number to query if a query needs pagination."
+        schema:
+          type: integer
+          minimum: 1
+      pageSize:
+        name: pageSize
+        in: query
+        description: "The number of items in a page if a query needs pagination."
+        schema:
+          type: integer
+          minimum: 1
+          default: 10
+      sort:
+        name: sort
+        in: query
+        description: |
+          Sort the returned result. Sorting occurs before pagination.
+
+          By default, posts are sorted by publishedAt in descending order.
+        schema:
+          $ref: "#/components/schemas/sort"
+        examples:
+          sortByDateAscending:
+            value: "publishedAt_ASC"
+contentType: yaml

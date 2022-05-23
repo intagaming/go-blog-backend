@@ -1,0 +1,21 @@
+_id: req_wrk_b1e40fe420634d7f81d7a1b14c6ab2722e42ba05
+type: Request
+parentId: wrk_b1e40fe420634d7f81d7a1b14c6ab272
+modified: 1653315995015
+created: 1653315995015
+url: "{{ base_url }}/posts/{{ slug }}"
+name: Delete a post
+description: ""
+method: DELETE
+body: {}
+parameters: []
+headers: []
+authentication: {}
+metaSortKey: -1653315995015
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

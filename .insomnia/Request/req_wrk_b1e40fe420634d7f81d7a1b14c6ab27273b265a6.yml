@@ -1,0 +1,24 @@
+_id: req_wrk_b1e40fe420634d7f81d7a1b14c6ab27273b265a6
+type: Request
+parentId: wrk_b1e40fe420634d7f81d7a1b14c6ab272
+modified: 1653315994987
+created: 1653315994987
+url: "{{ base_url }}/pages"
+name: Returns all pages
+description: ""
+method: GET
+body: {}
+parameters:
+  - name: sort
+    disabled: true
+    value: fieldName_DESC
+headers: []
+authentication: {}
+metaSortKey: -1653315994987
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
