@@ -27,7 +27,7 @@ type PostModel struct {
 func (m PostModel) All() ([]*Post, error) {
 	rows, err := m.DB.Query(`
 		SELECT slug, title, excerpt, content
-		FROM posts `)
+		FROM posts`)
 	if err != nil {
 		return nil, err
 	}
@@ -82,6 +82,37 @@ func (m PostModel) All() ([]*Post, error) {
 	}
 
 	return posts, nil
+}
+
+func (m PostModel) Get(slug string) (*Post, error) {
+	var post Post = Post{Slug: slug}
+
+	err := m.DB.QueryRow(`
+		SELECT title, excerpt, content
+		FROM posts
+		WHERE slug = ?`, slug).Scan(&post.Title, &post.Excerpt, &post.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	var timeBytes []byte
+
+	err = m.DB.QueryRow(`
+		SELECT published_at
+		FROM posts_publication
+		WHERE post_slug = ?`, slug).Scan(&timeBytes)
+	if err == nil {
+		parsedTime, err := time.Parse("2006-01-02 15:04:05", string(timeBytes))
+		if err != nil {
+			return nil, err
+		}
+		post.Published = true
+		post.PublishedAt = &parsedTime
+	} else if err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &post, nil
 }
 
 func (m PostModel) Add(post *Post) error {

@@ -1,9 +1,12 @@
 package blog
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"hxann.com/blog/models"
 )
@@ -54,6 +57,43 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusCreated)
+	render.Render(w, r, resp)
+}
+
+type postCtxKey struct{}
+
+func (env *Env) PostContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var post *models.Post
+		var err error
+
+		if slug := chi.URLParam(r, "slug"); slug != "" {
+			post, err = env.posts.Get(slug)
+		} else { // slug empty
+			render.Render(w, r, ErrInvalidRequest(errors.New("slug required")))
+		}
+		if err == sql.ErrNoRows {
+			render.Render(w, r, ErrNotFound)
+			return
+		}
+		if err != nil {
+			render.Render(w, r, ErrInternal(err))
+			panic(err)
+		}
+		ctx := context.WithValue(r.Context(), postCtxKey{}, post)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (env *Env) PostGet(w http.ResponseWriter, r *http.Request) {
+	post := r.Context().Value(postCtxKey{}).(*models.Post)
+
+	resp, err := NewPostResponse(post, env)
+	if err != nil {
+		render.Render(w, r, ErrInternal(err))
+		panic(err)
+	}
+
 	render.Render(w, r, resp)
 }
 

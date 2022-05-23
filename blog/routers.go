@@ -25,6 +25,11 @@ func NewRouter(db *sql.DB) *chi.Mux {
 	r.Route("/posts", func(r chi.Router) {
 		r.Get("/", env.PostsGet)
 		r.Post("/", env.PostsPost)
+
+		r.Route("/{slug}", func(r chi.Router) {
+			r.Use(env.PostContext)
+			r.Get("/", env.PostGet)
+		})
 	})
 
 	return r

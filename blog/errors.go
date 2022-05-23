@@ -32,3 +32,8 @@ func ErrInvalidRequest(err error) render.Renderer {
 		Message: err.Error(),
 	}
 }
+
+var ErrNotFound = &ErrorResponse{
+	Status:  http.StatusNotFound,
+	Message: "Resource not found.",
+}
