@@ -2,21 +2,28 @@ package models
 
 import (
 	"database/sql"
+	"time"
 )
 
 type Post struct {
-	Slug        string
-	Title       string
-	Excerpt     string
-	Content     string
-	PublishedAt sql.NullTime
+	Slug        string      `json:"slug"`
+	Title       string      `json:"title"`
+	Excerpt     string      `json:"excerpt"`
+	Content     string      `json:"content"`
+	PublishedAt publishedAt `json:"-"`
+}
+
+type publishedAt []byte
+
+func (pa publishedAt) Time() (time.Time, error) {
+	return time.Parse("2006-01-02 15:04:05", string(pa))
 }
 
 type PostModel struct {
 	DB *sql.DB
 }
 
-func (m PostModel) All() ([]Post, error) {
+func (m PostModel) All() ([]*Post, error) {
 	rows, err := m.DB.Query(`
 		SELECT slug, title, excerpt, content, published_at
 		FROM posts
@@ -26,7 +33,7 @@ func (m PostModel) All() ([]Post, error) {
 	}
 	defer rows.Close()
 
-	var posts []Post
+	var posts []*Post
 
 	for rows.Next() {
 		var post Post
@@ -36,7 +43,7 @@ func (m PostModel) All() ([]Post, error) {
 			return nil, err
 		}
 
-		posts = append(posts, post)
+		posts = append(posts, &post)
 	}
 
 	if err = rows.Err(); err != nil {

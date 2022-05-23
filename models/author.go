@@ -5,17 +5,17 @@ import (
 )
 
 type Author struct {
-	UserId   string
-	FullName string
-	Email    string
-	Bio      string
+	UserId   string `json:"user_id"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Bio      string `json:"bio"`
 }
 
 type AuthorModel struct {
 	DB *sql.DB
 }
 
-func (m AuthorModel) OfPost(postSlug string) ([]Author, error) {
+func (m AuthorModel) OfPost(postSlug string) ([]*Author, error) {
 	rows, err := m.DB.Query(`
 		SELECT user_id, full_name, email, bio
 		FROM authors
@@ -27,7 +27,7 @@ func (m AuthorModel) OfPost(postSlug string) ([]Author, error) {
 	}
 	defer rows.Close()
 
-	var authors []Author
+	var authors []*Author
 
 	for rows.Next() {
 		var author Author
@@ -37,7 +37,7 @@ func (m AuthorModel) OfPost(postSlug string) ([]Author, error) {
 			return nil, err
 		}
 
-		authors = append(authors, author)
+		authors = append(authors, &author)
 	}
 
 	if err = rows.Err(); err != nil {
