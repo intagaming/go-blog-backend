@@ -55,6 +55,9 @@ func (m PostModel) All() ([]*Post, error) {
 		}
 		publications[slug] = parsedTime
 	}
+	if err = publishedRows.Err(); err != nil {
+		return nil, err
+	}
 
 	var posts []*Post
 
