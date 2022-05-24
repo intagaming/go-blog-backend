@@ -173,7 +173,13 @@ func (m PostModel) Update(newPost *Post) error {
 }
 
 func (m PostModel) Delete(slug string) error {
-	res, err := m.DB.Exec(`DELETE FROM posts WHERE slug = ?`, slug)
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.Exec(`DELETE FROM posts WHERE slug = ?`, slug)
 	if err != nil {
 		return err
 	}
@@ -186,5 +192,11 @@ func (m PostModel) Delete(slug string) error {
 		return errors.New("no post were deleted")
 	}
 
+	_, err = tx.Exec(`DELETE FROM posts_publication WHERE post_slug = ?`, slug)
+	if err != nil {
+		return err
+	}
+
+	tx.Commit()
 	return nil
 }
