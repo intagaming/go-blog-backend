@@ -46,3 +46,30 @@ func (m AuthorModel) OfPost(postSlug string) ([]*Author, error) {
 
 	return authors, nil
 }
+
+func (m AuthorModel) Get(userId string) (*Author, error) {
+	var author Author = Author{UserId: userId}
+
+	err := m.DB.QueryRow(`
+		SELECT full_name, email, bio
+		FROM authors
+		WHERE user_id = ?`, userId).Scan(&author.FullName, &author.Email, &author.Bio)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &author, nil
+}
+
+func (m AuthorModel) Add(author *Author) error {
+	_, err := m.DB.Exec(`
+		INSERT INTO authors
+		(user_id, full_name, email, bio)
+		VALUES (?, ?, ?, ?)`, author.UserId, author.FullName, author.Email, author.Bio)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
