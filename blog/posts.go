@@ -57,9 +57,15 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	resp, err := NewPostResponse(post, env)
+	insertedPost, err := env.posts.Get(post.Slug)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		w.WriteHeader(http.StatusCreated)
+		panic(err)
+	}
+
+	resp, err := NewPostResponse(insertedPost, env)
+	if err != nil {
+		w.WriteHeader(http.StatusCreated)
 		panic(err)
 	}
 
