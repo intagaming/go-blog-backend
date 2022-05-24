@@ -109,13 +109,35 @@ func (m PostModel) Get(slug string) (*Post, error) {
 }
 
 func (m PostModel) Add(post *Post) error {
-	_, err := m.DB.Exec(`
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`
 		INSERT INTO posts
 		(slug, title, excerpt, content)
 		VALUES (?, ?, ?, ?)`, post.Slug, post.Title, post.Excerpt, post.Content)
 	if err != nil {
 		return err
 	}
+
+	if post.Published {
+		if post.PublishedAt == "" {
+			now := time.Now()
+			post.PublishedAt = now.Format("2006-01-02 15:04:05")
+		}
+		_, err = tx.Exec(`
+			INSERT INTO posts_publication
+			(post_slug, published_at)
+			VALUES (?, ?)`, post.Slug, post.PublishedAt)
+	}
+	if err != nil {
+		return err
+	}
+
+	tx.Commit()
 	return nil
 }
 
