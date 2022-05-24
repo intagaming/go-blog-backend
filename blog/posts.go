@@ -133,8 +133,8 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 	if newPost.Content == "" {
 		newPost.Content = post.Content
 	}
-	if data.Published != nil {
-		newPost.Published = *data.Published
+	if data.Published == nil {
+		newPost.Published = post.Published
 	}
 	if newPost.PublishedAt == "" {
 		newPost.PublishedAt = post.PublishedAt
@@ -175,6 +175,9 @@ type PostRequest struct {
 func (pr *PostRequest) Bind(r *http.Request) error {
 	if pr == nil {
 		return errors.New("missing required Post fields")
+	}
+	if pr.Published != nil {
+		pr.Post.Published = *pr.Published
 	}
 
 	return nil
