@@ -1,10 +1,14 @@
 package blog
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/go-sql-driver/mysql"
 	"hxann.com/blog/models"
 )
 
@@ -43,13 +47,25 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := env.posts.Add(post); err != nil {
+		if driverErr, ok := err.(*mysql.MySQLError); ok {
+			if driverErr.Number == 1062 {
+				render.Render(w, r, ErrDuplicate(err))
+				return
+			}
+		}
 		render.Render(w, r, ErrInternal(err))
 		panic(err)
 	}
 
-	resp, err := NewPostResponse(post, env)
+	insertedPost, err := env.posts.Get(post.Slug)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		w.WriteHeader(http.StatusCreated)
+		panic(err)
+	}
+
+	resp, err := NewPostResponse(insertedPost, env)
+	if err != nil {
+		w.WriteHeader(http.StatusCreated)
 		panic(err)
 	}
 
@@ -57,13 +73,111 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, resp)
 }
 
+type postCtxKey struct{}
+
+func (env *Env) PostContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var post *models.Post
+		var err error
+
+		if slug := chi.URLParam(r, "slug"); slug != "" {
+			post, err = env.posts.Get(slug)
+		} else { // slug empty
+			render.Render(w, r, ErrInvalidRequest(errors.New("slug required")))
+		}
+		if err == sql.ErrNoRows {
+			render.Render(w, r, ErrNotFound)
+			return
+		}
+		if err != nil {
+			render.Render(w, r, ErrInternal(err))
+			panic(err)
+		}
+		ctx := context.WithValue(r.Context(), postCtxKey{}, post)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (env *Env) PostGet(w http.ResponseWriter, r *http.Request) {
+	post := r.Context().Value(postCtxKey{}).(*models.Post)
+
+	resp, err := NewPostResponse(post, env)
+	if err != nil {
+		render.Render(w, r, ErrInternal(err))
+		panic(err)
+	}
+
+	render.Render(w, r, resp)
+}
+
+func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
+	post := r.Context().Value(postCtxKey{}).(*models.Post)
+
+	data := &PostRequest{}
+	if err := render.Bind(r, data); err != nil {
+		render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	newPost := data.Post
+	// Provides the slug from context
+	newPost.Slug = post.Slug
+	// Fill in missing fields
+	// TODO: improve this
+	if newPost.Title == "" {
+		newPost.Title = post.Title
+	}
+	if newPost.Excerpt == "" {
+		newPost.Excerpt = post.Excerpt
+	}
+	if newPost.Content == "" {
+		newPost.Content = post.Content
+	}
+	if data.Published == nil {
+		newPost.Published = post.Published
+	}
+	if newPost.PublishedAt == "" {
+		newPost.PublishedAt = post.PublishedAt
+	}
+
+	err := env.posts.Update(newPost)
+	if err != nil {
+		render.Render(w, r, ErrInternal(err))
+		panic(err)
+	}
+
+	resp, err := NewPostResponse(newPost, env)
+	if err != nil {
+		render.Render(w, r, ErrInternal(err))
+		panic(err)
+	}
+
+	render.Render(w, r, resp)
+}
+
+func (env *Env) PostDelete(w http.ResponseWriter, r *http.Request) {
+	post := r.Context().Value(postCtxKey{}).(*models.Post)
+
+	err := env.posts.Delete(post.Slug)
+	if err != nil {
+		render.Render(w, r, ErrInternal(err))
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 type PostRequest struct {
 	*models.Post
+	Published *bool `json:"published"`
 }
 
 func (pr *PostRequest) Bind(r *http.Request) error {
-	if pr.Post == nil {
+	if pr == nil {
 		return errors.New("missing required Post fields")
+	}
+	if pr.Published != nil {
+		pr.Post.Published = *pr.Published
 	}
 
 	return nil
@@ -71,16 +185,11 @@ func (pr *PostRequest) Bind(r *http.Request) error {
 
 type PostResponse struct {
 	*models.Post
-	PublishedAt string            `json:"published_at,omitempty"`
-	Authors     []*AuthorResponse `json:"authors"`
+	Authors []*AuthorResponse `json:"authors"`
 	// TODO: coverUrl, lastPostSlug, nextPostSlug
 }
 
 func (resp *PostResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	if resp.Post.PublishedAt != nil {
-		resp.PublishedAt = resp.Post.PublishedAt.Format("2006-01-02 15:04:05")
-	}
-
 	return nil
 }
 
