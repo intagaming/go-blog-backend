@@ -1,7 +1,7 @@
 _id: req_wrk_b1e40fe420634d7f81d7a1b14c6ab2729f6f8d9b
 type: Request
 parentId: wrk_b1e40fe420634d7f81d7a1b14c6ab272
-modified: 1653315995020
+modified: 1653413154131
 created: 1653315995020
 url: "{{ base_url }}/posts/{{ slug }}"
 name: Edit a post
@@ -9,12 +9,26 @@ description: ""
 method: PUT
 body:
   mimeType: application/json
-  text: "{}"
+  text: |-
+    {
+    	"title": "Edited Title",
+    	"published": true,
+    	"published_at": "2000-01-02 01:02:03"
+    }
 parameters: []
 headers:
   - name: Content-Type
     value: application/json
-authentication: {}
+    id: pair_b68360d183cc443ba37abafdfbe65451
+authentication:
+  clientId: "{{ oauth2ClientId }}"
+  grantType: authorization_code
+  scope: author admin
+  type: oauth2
+  clientSecret: "{{ oauth2ClientSecret }}"
+  redirectUrl: "{{ oauth2RedirectUrl }}"
+  accessTokenUrl: https://dev-wy79rbxh.us.auth0.com/oauth/token
+  authorizationUrl: https://dev-wy79rbxh.us.auth0.com/authorize?audience=https://hxann.com/blog
 metaSortKey: -1653315995020
 isPrivate: false
 settingStoreCookies: true

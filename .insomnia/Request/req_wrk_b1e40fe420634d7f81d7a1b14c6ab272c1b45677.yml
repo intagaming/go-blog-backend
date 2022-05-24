@@ -1,7 +1,7 @@
 _id: req_wrk_b1e40fe420634d7f81d7a1b14c6ab272c1b45677
 type: Request
 parentId: wrk_b1e40fe420634d7f81d7a1b14c6ab272
-modified: 1653315995007
+modified: 1653413159098
 created: 1653315995007
 url: "{{ base_url }}/pages/{{ slug }}"
 name: Returns a page's details
@@ -10,7 +10,15 @@ method: GET
 body: {}
 parameters: []
 headers: []
-authentication: {}
+authentication:
+  clientId: "{{ oauth2ClientId }}"
+  grantType: authorization_code
+  scope: author admin
+  type: oauth2
+  clientSecret: "{{ oauth2ClientSecret }}"
+  redirectUrl: "{{ oauth2RedirectUrl }}"
+  accessTokenUrl: https://dev-wy79rbxh.us.auth0.com/oauth/token
+  authorizationUrl: https://dev-wy79rbxh.us.auth0.com/authorize?audience=https://hxann.com/blog
 metaSortKey: -1653315995007
 isPrivate: false
 settingStoreCookies: true

@@ -1,7 +1,7 @@
 _id: req_wrk_b1e40fe420634d7f81d7a1b14c6ab2722e42ba05
 type: Request
 parentId: wrk_b1e40fe420634d7f81d7a1b14c6ab272
-modified: 1653315995015
+modified: 1653413156563
 created: 1653315995015
 url: "{{ base_url }}/posts/{{ slug }}"
 name: Delete a post
@@ -10,7 +10,15 @@ method: DELETE
 body: {}
 parameters: []
 headers: []
-authentication: {}
+authentication:
+  clientId: "{{ oauth2ClientId }}"
+  grantType: authorization_code
+  scope: author admin
+  type: oauth2
+  clientSecret: "{{ oauth2ClientSecret }}"
+  redirectUrl: "{{ oauth2RedirectUrl }}"
+  accessTokenUrl: https://dev-wy79rbxh.us.auth0.com/oauth/token
+  authorizationUrl: https://dev-wy79rbxh.us.auth0.com/authorize?audience=https://hxann.com/blog
 metaSortKey: -1653315995015
 isPrivate: false
 settingStoreCookies: true

@@ -1,30 +1,28 @@
-_id: req_wrk_b1e40fe420634d7f81d7a1b14c6ab2721d2bb290
+_id: req_wrk_b1e40fe420634d7f81d7a1b14c6ab2720c6fc6eb
 type: Request
 parentId: wrk_b1e40fe420634d7f81d7a1b14c6ab272
-modified: 1653413164425
-created: 1653315994999
-url: "{{ base_url }}/pages/{{ slug }}"
-name: Edit a page
+modified: 1653413146446
+created: 1653318117561
+url: "{{ base_url }}/posts"
+name: Create a post
 description: ""
-method: PUT
+method: POST
 body:
   mimeType: application/json
   text: |-
     {
-      "slug": "string",
-      "authors": [
-        {}
-      ],
-      "title": "string",
-      "excerpt": "string",
-      "published": true,
-      "publishedAt": "2022-05-23T14:26:34.980Z"
+    	"slug": "{{ _.slug }}",
+    	"title": "Example post",
+    	"excerpt": "Excerpt example",
+    	"content": "Content example.",
+    	"published": true,
+    	"published_at": "2022-05-24 15:04:05"
     }
 parameters: []
 headers:
   - name: Content-Type
     value: application/json
-    id: pair_51dff7a577dc4cfca3d70bcb0a232e0b
+    id: pair_751aa71e6923411792d0b541cddbe495
 authentication:
   clientId: "{{ oauth2ClientId }}"
   grantType: authorization_code
@@ -34,7 +32,7 @@ authentication:
   redirectUrl: "{{ oauth2RedirectUrl }}"
   accessTokenUrl: https://dev-wy79rbxh.us.auth0.com/oauth/token
   authorizationUrl: https://dev-wy79rbxh.us.auth0.com/authorize?audience=https://hxann.com/blog
-metaSortKey: -1653315994999
+metaSortKey: -1653318117561
 isPrivate: false
 settingStoreCookies: true
 settingSendCookies: true

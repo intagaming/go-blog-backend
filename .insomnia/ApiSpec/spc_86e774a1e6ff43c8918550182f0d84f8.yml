@@ -1,7 +1,7 @@
 _id: spc_86e774a1e6ff43c8918550182f0d84f8
 type: ApiSpec
 parentId: wrk_b1e40fe420634d7f81d7a1b14c6ab272
-modified: 1653316265370
+modified: 1653413181996
 created: 1653315558556
 fileName: Blog Document
 contents: >
@@ -11,28 +11,24 @@ contents: >
     title: Go Blog API
     version: "1.0"
   paths:
-    /posts/{slug}:
+    /posts:
       get:
-        summary: Returns a post's details
+        summary: Returns all blog posts
         parameters:
-          - $ref: "#/components/parameters/slug"
+          - $ref: "#/components/parameters/page"
+          - $ref: "#/components/parameters/pageSize"
+          - $ref: "#/components/parameters/sort"
         responses:
           "200":
             description: OK
             content:
               application/json:
                 schema:
-                  $ref: "#/components/schemas/PostResponse"
-          "404":
-            description: Post not found
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/errorResponse"
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PostResponse"
       post:
         summary: Create a post
-        parameters:
-          - $ref: "#/components/parameters/slug"
         requestBody:
           content:
             application/json:
@@ -47,6 +43,24 @@ contents: >
                   $ref: "#/components/schemas/PostResponse"
           "403":
             description: A post with that slug is existed.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/errorResponse"
+    /posts/{slug}:
+      get:
+        summary: Returns a post's details
+        parameters:
+          - $ref: "#/components/parameters/slug"
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PostResponse"
+          "404":
+            description: Post not found
             content:
               application/json:
                 schema:
@@ -78,12 +92,8 @@ contents: >
         parameters:
           - $ref: "#/components/parameters/slug"
         responses:
-          "200":
+          "204":
             description: OK
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/PostResponse"
           "403":
             description: Access denied.
             content:
@@ -96,12 +106,10 @@ contents: >
               application/json:
                 schema:
                   $ref: "#/components/schemas/errorResponse"
-    /posts:
+    /pages:
       get:
-        summary: Returns all blog posts
+        summary: Returns all pages
         parameters:
-          - $ref: "#/components/parameters/page"
-          - $ref: "#/components/parameters/pageSize"
           - $ref: "#/components/parameters/sort"
         responses:
           "200":
@@ -111,7 +119,7 @@ contents: >
                 schema:
                   type: array
                   items:
-                    $ref: "#/components/schemas/PostResponse"
+                    $ref: "#/components/schemas/PageResponse"
     /pages/{slug}:
       get:
         summary: Returns a page's details
@@ -197,20 +205,6 @@ contents: >
               application/json:
                 schema:
                   $ref: "#/components/schemas/errorResponse"
-    /pages:
-      get:
-        summary: Returns all pages
-        parameters:
-          - $ref: "#/components/parameters/sort"
-        responses:
-          "200":
-            description: OK
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/PageResponse"
   components:
     schemas:
       sort:
@@ -339,4 +333,18 @@ contents: >
         examples:
           sortByDateAscending:
             value: "publishedAt_ASC"
+    securitySchemes:
+      oAuth:
+        type: oauth2
+        flows:
+          authorizationCode:
+            authorizationUrl: https://dev-wy79rbxh.us.auth0.com/authorize?audience=https://hxann.com/blog
+            tokenUrl: https://dev-wy79rbxh.us.auth0.com/oauth/token
+            scopes:
+              author: Author
+              admin: Admin
+  security:
+    - oAuth:
+      - author
+      - admin
 contentType: yaml
