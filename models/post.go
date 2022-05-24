@@ -165,26 +165,32 @@ func (m PostModel) Update(newPost *Post) error {
 	}
 
 	if !post.Published && newPost.Published {
-		publishedAt := newPost.PublishedAt
-		if publishedAt == "" {
+		if newPost.PublishedAt == "" {
 			now := time.Now()
-			publishedAt = now.Format("2006-01-02 15:04:05")
+			newPost.PublishedAt = now.Format("2006-01-02 15:04:05")
 		}
 		_, err := tx.Exec(`
 			INSERT INTO posts_publication
 			(post_slug, published_at)
-			VALUES (?, ?)`, post.Slug, publishedAt)
+			VALUES (?, ?)`, newPost.Slug, newPost.PublishedAt)
 		if err != nil {
 			return err
 		}
-		newPost.PublishedAt = publishedAt
 	} else if post.Published && !newPost.Published {
-		_, err := tx.Exec(`DELETE FROM posts_publication WHERE post_slug=?`, post.Slug)
+		_, err := tx.Exec(`DELETE FROM posts_publication WHERE post_slug=?`, newPost.Slug)
 		if err != nil {
 			return err
 		}
 		newPost.Published = false
 		newPost.PublishedAt = ""
+	} else if newPost.Published && newPost.PublishedAt != "" {
+		_, err := tx.Exec(`
+			UPDATE posts_publication
+			SET published_at = ?
+			WHERE post_slug = ?`, newPost.PublishedAt, newPost.Slug)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
