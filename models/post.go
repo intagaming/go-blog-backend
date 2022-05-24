@@ -7,12 +7,12 @@ import (
 )
 
 type Post struct {
-	Slug        string     `json:"slug"`
-	Title       string     `json:"title"`
-	Excerpt     string     `json:"excerpt"`
-	Content     string     `json:"content"`
-	Published   bool       `json:"published"`
-	PublishedAt *time.Time `json:"-"`
+	Slug        string `json:"slug"`
+	Title       string `json:"title"`
+	Excerpt     string `json:"excerpt"`
+	Content     string `json:"content"`
+	Published   bool   `json:"published"`
+	PublishedAt string `json:"published_at,omitempty"`
 }
 
 // type publishedAt []byte
@@ -42,7 +42,7 @@ func (m PostModel) All() ([]*Post, error) {
 	}
 	defer publishedRows.Close()
 
-	publications := make(map[string]time.Time)
+	publications := make(map[string]string)
 	for publishedRows.Next() {
 		var slug string
 		var timeBytes []byte
@@ -50,11 +50,7 @@ func (m PostModel) All() ([]*Post, error) {
 		if err != nil {
 			return nil, err
 		}
-		parsedTime, err := time.Parse("2006-01-02 15:04:05", string(timeBytes))
-		if err != nil {
-			return nil, err
-		}
-		publications[slug] = parsedTime
+		publications[slug] = string(timeBytes)
 	}
 	if err = publishedRows.Err(); err != nil {
 		return nil, err
@@ -72,7 +68,7 @@ func (m PostModel) All() ([]*Post, error) {
 
 		if publishedAt, ok := publications[post.Slug]; ok {
 			post.Published = true
-			post.PublishedAt = &publishedAt
+			post.PublishedAt = publishedAt
 		}
 
 		posts = append(posts, &post)
@@ -103,12 +99,8 @@ func (m PostModel) Get(slug string) (*Post, error) {
 		FROM posts_publication
 		WHERE post_slug = ?`, slug).Scan(&timeBytes)
 	if err == nil {
-		parsedTime, err := time.Parse("2006-01-02 15:04:05", string(timeBytes))
-		if err != nil {
-			return nil, err
-		}
 		post.Published = true
-		post.PublishedAt = &parsedTime
+		post.PublishedAt = string(timeBytes)
 	} else if err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -124,6 +116,59 @@ func (m PostModel) Add(post *Post) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// Update updates the post and also modifies newPost as the new post is in the
+// database.
+func (m PostModel) Update(newPost *Post) error {
+	post, err := m.Get(newPost.Slug)
+	if err != nil {
+		return err
+	}
+
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`
+		UPDATE posts
+		SET title=?, excerpt=?, content=?
+		WHERE slug=?`, newPost.Title, newPost.Excerpt, newPost.Content, newPost.Slug)
+
+	if err != nil {
+		return err
+	}
+
+	if !post.Published && newPost.Published {
+		publishedAt := newPost.PublishedAt
+		if publishedAt == "" {
+			now := time.Now()
+			publishedAt = now.Format("2006-01-02 15:04:05")
+		}
+		_, err := tx.Exec(`
+			INSERT INTO posts_publication
+			(post_slug, published_at)
+			VALUES (?, ?)`, post.Slug, publishedAt)
+		if err != nil {
+			return err
+		}
+		newPost.PublishedAt = publishedAt
+	} else if post.Published && !newPost.Published {
+		_, err := tx.Exec(`DELETE FROM posts_publication WHERE post_slug=?`, post.Slug)
+		if err != nil {
+			return err
+		}
+		newPost.Published = false
+		newPost.PublishedAt = ""
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
