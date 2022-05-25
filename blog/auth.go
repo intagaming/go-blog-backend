@@ -84,7 +84,7 @@ func (c CustomClaims) HasScope(expectedScope string) bool {
 	return false
 }
 
-type AuthorCtxKey struct{}
+type authorCtxKey struct{}
 
 func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -114,7 +114,7 @@ func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 				}
 			}
 			// set Author to the context
-			ctx := context.WithValue(r.Context(), AuthorCtxKey{}, author)
+			ctx := context.WithValue(r.Context(), authorCtxKey{}, author)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

@@ -32,7 +32,7 @@ func (env *Env) PostsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(AuthorCtxKey{}).(*models.Author)
+	author := r.Context().Value(authorCtxKey{}).(*models.Author)
 
 	data := &PostRequest{}
 	if err := render.Bind(r, data); err != nil {
