@@ -50,7 +50,7 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authorIds := append(data.Authors, author.UserId)
-	authorIds, missingAuthorId, err := ValidateAuthorIds(authorIds, env)
+	authors, missingAuthorId, err := AuthorIdsToAuthors(authorIds, env)
 	if err != nil {
 		if missingAuthorId != nil {
 			render.Render(w, r, ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
@@ -59,8 +59,15 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, ErrInternal(err))
 		panic(err)
 	}
+	for _, dbAuthor := range authors {
+		if dbAuthor.UserId == author.UserId {
+			post.Author = dbAuthor
+		} else {
+			post.Authors = append(post.Authors, dbAuthor)
+		}
+	}
 
-	if err := env.posts.Add(post, authorIds); err != nil {
+	if err := env.posts.Add(post); err != nil {
 		if driverErr, ok := err.(*mysql.MySQLError); ok {
 			if driverErr.Number == 1062 {
 				render.Render(w, r, ErrDuplicate(err))
@@ -125,7 +132,7 @@ func (env *Env) PostGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(AuthorCtxKey{}).(*models.Author)
+	// author := r.Context().Value(AuthorCtxKey{}).(*models.Author)
 
 	post := r.Context().Value(postCtxKey{}).(*models.Post)
 
@@ -155,16 +162,23 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 	if newPost.PublishedAt == "" {
 		newPost.PublishedAt = post.PublishedAt
 	}
-
-	err := env.posts.Update(newPost)
-	if err != nil {
-		render.Render(w, r, ErrInternal(err))
-		panic(err)
+	if data.Author == "" {
+		newPost.Author = post.Author
+	} else {
+		// The original author is making another author the original author.
+		newOriginalAuthor, err := env.authors.Get(data.Author)
+		if err != nil {
+			render.Render(w, r, ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", data.Author)))
+			return
+		}
+		newPost.Author = newOriginalAuthor
 	}
+	if data.Authors == nil {
+		newPost.Authors = post.Authors
+	} else {
+		// TODO: if not the original author, they can't change authors
 
-	if data.Authors != nil {
-		authorIds := append(data.Authors, author.UserId)
-		authorIds, missingAuthorId, err := ValidateAuthorIds(authorIds, env)
+		authors, missingAuthorId, err := AuthorIdsToAuthors(data.Authors, env)
 		if err != nil {
 			if missingAuthorId != nil {
 				render.Render(w, r, ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
@@ -173,7 +187,14 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 			render.Render(w, r, ErrInternal(err))
 			panic(err)
 		}
-		env.posts.UpdateAuthors(post.Slug, authorIds)
+
+		newPost.Authors = authors
+	}
+
+	err := env.posts.Update(newPost)
+	if err != nil {
+		render.Render(w, r, ErrInternal(err))
+		panic(err)
 	}
 
 	resp, err := NewPostResponse(newPost, env)
@@ -200,6 +221,7 @@ func (env *Env) PostDelete(w http.ResponseWriter, r *http.Request) {
 type PostRequest struct {
 	*models.Post
 	Published *bool    `json:"published"`
+	Author    string   `json:"author"`
 	Authors   []string `json:"authors"`
 }
 
@@ -250,9 +272,8 @@ func NewPostListResponse(posts []*models.Post, env *Env) ([]render.Renderer, err
 	return list, nil
 }
 
-// ValidateAuthorIds makes sure all authorIds are valid authors, and modifies
-// authorIds to only include any author once.
-func ValidateAuthorIds(authorIds []string, env *Env) (uniqueAuthorIds []string, missingAuthorId *string, err error) {
+// AuthorIdsToAuthors returns a list of Author from authorIds
+func AuthorIdsToAuthors(authorIds []string, env *Env) (authors []*models.Author, missingAuthorId *string, err error) {
 	var authorIdsSet map[string]struct{} = make(map[string]struct{})
 	for _, authorId := range authorIds {
 		authorIdsSet[authorId] = struct{}{}
@@ -267,11 +288,12 @@ func ValidateAuthorIds(authorIds []string, env *Env) (uniqueAuthorIds []string, 
 
 	// Assure that all of the authors in the request are valid
 	for _, authorId := range authorIds {
-		_, err := env.authors.Get(authorId)
+		author, err := env.authors.Get(authorId)
 		if err != nil {
 			return nil, &authorId, err
 		}
+		authors = append(authors, author)
 	}
 
-	return authorIds, nil, nil
+	return authors, nil, nil
 }

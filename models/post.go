@@ -7,12 +7,14 @@ import (
 )
 
 type Post struct {
-	Slug        string `json:"slug"`
-	Title       string `json:"title"`
-	Excerpt     string `json:"excerpt"`
-	Content     string `json:"content"`
-	Published   bool   `json:"published"`
-	PublishedAt string `json:"published_at,omitempty"`
+	Slug        string    `json:"slug"`
+	Title       string    `json:"title"`
+	Excerpt     string    `json:"excerpt"`
+	Content     string    `json:"content"`
+	Published   bool      `json:"published"`
+	PublishedAt string    `json:"published_at,omitempty"`
+	Author      *Author   `json:"author"`
+	Authors     []*Author `json:"authors,omitempty"`
 }
 
 // type publishedAt []byte
@@ -71,6 +73,8 @@ func (m PostModel) All() ([]*Post, error) {
 			post.PublishedAt = publishedAt
 		}
 
+		m.FillAuthors(&post)
+
 		posts = append(posts, &post)
 	}
 
@@ -105,10 +109,12 @@ func (m PostModel) Get(slug string) (*Post, error) {
 		return nil, err
 	}
 
+	m.FillAuthors(&post)
+
 	return &post, nil
 }
 
-func (m PostModel) Add(post *Post, authorIds []string) error {
+func (m PostModel) Add(post *Post) error {
 	tx, err := m.DB.Begin()
 	if err != nil {
 		return err
@@ -139,16 +145,24 @@ func (m PostModel) Add(post *Post, authorIds []string) error {
 
 	addAuthorStmt, err := tx.Prepare(`
 		INSERT INTO posts_authors
-		(post_slug, author_user_id)
-		VALUES (?, ?)`)
+		(post_slug, author_user_id, is_original)
+		VALUES (?, ?, ?)`)
 	if err != nil {
 		return err
 	}
-	for _, authorId := range authorIds {
-		_, err := addAuthorStmt.Exec(post.Slug, authorId)
+	for _, author := range post.Authors {
+		if author.UserId == post.Author.UserId {
+			continue
+		}
+
+		_, err := addAuthorStmt.Exec(post.Slug, author.UserId, 0)
 		if err != nil {
 			return err
 		}
+	}
+	_, err = addAuthorStmt.Exec(post.Slug, post.Author.UserId, 1)
+	if err != nil {
+		return err
 	}
 
 	tx.Commit()
@@ -207,40 +221,37 @@ func (m PostModel) Update(newPost *Post) error {
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m PostModel) UpdateAuthors(slug string, authorIds []string) error {
-	tx, err := m.DB.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	_, err = tx.Exec(`DELETE FROM posts_authors WHERE post_slug = ?`, slug)
+	_, err = tx.Exec(`DELETE FROM posts_authors WHERE post_slug = ?`, newPost.Slug)
 	if err != nil {
 		return err
 	}
 
 	addAuthorStmt, err := tx.Prepare(`
 		INSERT INTO posts_authors
-		(post_slug, author_user_id)
-		VALUES (?, ?)`)
+		(post_slug, author_user_id, is_original)
+		VALUES (?, ?, ?)`)
 	if err != nil {
 		return err
 	}
-	for _, authorId := range authorIds {
-		_, err := addAuthorStmt.Exec(slug, authorId)
+	for _, author := range newPost.Authors {
+		if author.UserId == newPost.Author.UserId {
+			continue
+		}
+
+		_, err := addAuthorStmt.Exec(newPost.Slug, author.UserId, 0)
 		if err != nil {
 			return err
 		}
 	}
+	_, err = addAuthorStmt.Exec(newPost.Slug, newPost.Author.UserId, 1)
+	if err != nil {
+		return err
+	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -275,5 +286,37 @@ func (m PostModel) Delete(slug string) error {
 	}
 
 	tx.Commit()
+	return nil
+}
+
+// FillAuthors fills in post.Author and post.Authors
+func (m PostModel) FillAuthors(post *Post) error {
+	rows, err := m.DB.Query(`
+			SELECT user_id, full_name, email, bio, posts_authors.is_original
+			FROM authors
+			INNER JOIN posts_authors ON posts_authors.author_user_id = authors.user_id
+			WHERE posts_authors.post_slug = ?
+		`, post.Slug)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var authors []*Author
+	for rows.Next() {
+		var author Author
+		var isOriginal bool
+		err := rows.Scan(&author.UserId, &author.FullName, &author.Email, &author.Bio, &isOriginal)
+		if err != nil {
+			return err
+		}
+		authors = append(authors, &author)
+
+		if isOriginal {
+			post.Author = &author
+		}
+	}
+
+	post.Authors = authors
 	return nil
 }
