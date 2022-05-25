@@ -17,6 +17,18 @@ type Post struct {
 	Authors     []*Author `json:"authors,omitempty"`
 }
 
+func (post *Post) IsAuthor(author *Author) bool {
+	if post.Author.UserId == author.UserId {
+		return true
+	}
+	for _, postAuthor := range post.Authors {
+		if postAuthor.UserId == author.UserId {
+			return true
+		}
+	}
+	return false
+}
+
 // type publishedAt []byte
 
 // func (pa publishedAt) Time() (time.Time, error) {

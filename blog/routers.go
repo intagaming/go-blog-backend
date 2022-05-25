@@ -43,6 +43,7 @@ func NewRouter(db *sql.DB) *chi.Mux {
 
 			r.Route("/{slug}", func(r chi.Router) {
 				r.Use(env.PostContext)
+				r.Use(env.AuthorOfPost()) // requires author to be among the authors of the post
 				r.Get("/", env.PostGet)
 				r.Put("/", env.PostPut)
 				r.Delete("/", env.PostDelete)

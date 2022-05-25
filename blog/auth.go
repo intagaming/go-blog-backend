@@ -3,6 +3,7 @@ package blog
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"net/url"
@@ -117,6 +118,22 @@ func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 			ctx := context.WithValue(r.Context(), authorCtxKey{}, author)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func (env *Env) AuthorOfPost() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			post := r.Context().Value(postCtxKey{}).(*models.Post)
+			author := r.Context().Value(authorCtxKey{}).(*models.Author)
+
+			if !post.IsAuthor(author) {
+				render.Render(w, r, ErrForbidden(errors.New("you must be the among the authors of the post in order to access this resource")))
+				return
+			}
+
+			next.ServeHTTP(w, r)
 		})
 	}
 }
