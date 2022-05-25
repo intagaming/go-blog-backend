@@ -45,3 +45,11 @@ var ErrNotFound = &ErrorResponse{
 	Status:  http.StatusNotFound,
 	Message: "Resource not found.",
 }
+
+func ErrNotFoundCustom(err error) render.Renderer {
+	return &ErrorResponse{
+		Err:     err,
+		Status:  http.StatusNotFound,
+		Message: err.Error(),
+	}
+}

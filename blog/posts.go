@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -31,6 +32,8 @@ func (env *Env) PostsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
+	author := r.Context().Value(AuthorCtxKey{}).(*models.Author)
+
 	data := &PostRequest{}
 	if err := render.Bind(r, data); err != nil {
 		render.Render(w, r, ErrInvalidRequest(err))
@@ -46,7 +49,18 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := env.posts.Add(post); err != nil {
+	authorIds := append(data.Authors, author.UserId)
+	authorIds, missingAuthorId, err := ValidateAuthorIds(authorIds, env)
+	if err != nil {
+		if missingAuthorId != nil {
+			render.Render(w, r, ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
+			return
+		}
+		render.Render(w, r, ErrInternal(err))
+		panic(err)
+	}
+
+	if err := env.posts.Add(post, authorIds); err != nil {
 		if driverErr, ok := err.(*mysql.MySQLError); ok {
 			if driverErr.Number == 1062 {
 				render.Render(w, r, ErrDuplicate(err))
@@ -111,6 +125,8 @@ func (env *Env) PostGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
+	author := r.Context().Value(AuthorCtxKey{}).(*models.Author)
+
 	post := r.Context().Value(postCtxKey{}).(*models.Post)
 
 	data := &PostRequest{}
@@ -146,6 +162,20 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	if data.Authors != nil {
+		authorIds := append(data.Authors, author.UserId)
+		authorIds, missingAuthorId, err := ValidateAuthorIds(authorIds, env)
+		if err != nil {
+			if missingAuthorId != nil {
+				render.Render(w, r, ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
+				return
+			}
+			render.Render(w, r, ErrInternal(err))
+			panic(err)
+		}
+		env.posts.UpdateAuthors(post.Slug, authorIds)
+	}
+
 	resp, err := NewPostResponse(newPost, env)
 	if err != nil {
 		render.Render(w, r, ErrInternal(err))
@@ -169,7 +199,8 @@ func (env *Env) PostDelete(w http.ResponseWriter, r *http.Request) {
 
 type PostRequest struct {
 	*models.Post
-	Published *bool `json:"published"`
+	Published *bool    `json:"published"`
+	Authors   []string `json:"authors"`
 }
 
 func (pr *PostRequest) Bind(r *http.Request) error {
@@ -217,4 +248,30 @@ func NewPostListResponse(posts []*models.Post, env *Env) ([]render.Renderer, err
 		list = append(list, postResp)
 	}
 	return list, nil
+}
+
+// ValidateAuthorIds makes sure all authorIds are valid authors, and modifies
+// authorIds to only include any author once.
+func ValidateAuthorIds(authorIds []string, env *Env) (uniqueAuthorIds []string, missingAuthorId *string, err error) {
+	var authorIdsSet map[string]struct{} = make(map[string]struct{})
+	for _, authorId := range authorIds {
+		authorIdsSet[authorId] = struct{}{}
+	}
+
+	i := 0
+	for k := range authorIdsSet {
+		authorIds[i] = k
+		i++
+	}
+	authorIds = authorIds[:i]
+
+	// Assure that all of the authors in the request are valid
+	for _, authorId := range authorIds {
+		_, err := env.authors.Get(authorId)
+		if err != nil {
+			return nil, &authorId, err
+		}
+	}
+
+	return authorIds, nil, nil
 }

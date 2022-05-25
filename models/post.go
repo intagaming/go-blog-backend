@@ -108,7 +108,7 @@ func (m PostModel) Get(slug string) (*Post, error) {
 	return &post, nil
 }
 
-func (m PostModel) Add(post *Post) error {
+func (m PostModel) Add(post *Post, authorIds []string) error {
 	tx, err := m.DB.Begin()
 	if err != nil {
 		return err
@@ -135,6 +135,20 @@ func (m PostModel) Add(post *Post) error {
 	}
 	if err != nil {
 		return err
+	}
+
+	addAuthorStmt, err := tx.Prepare(`
+		INSERT INTO posts_authors
+		(post_slug, author_user_id)
+		VALUES (?, ?)`)
+	if err != nil {
+		return err
+	}
+	for _, authorId := range authorIds {
+		_, err := addAuthorStmt.Exec(post.Slug, authorId)
+		if err != nil {
+			return err
+		}
 	}
 
 	tx.Commit()
@@ -200,6 +214,36 @@ func (m PostModel) Update(newPost *Post) error {
 	return nil
 }
 
+func (m PostModel) UpdateAuthors(slug string, authorIds []string) error {
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`DELETE FROM posts_authors WHERE post_slug = ?`, slug)
+	if err != nil {
+		return err
+	}
+
+	addAuthorStmt, err := tx.Prepare(`
+		INSERT INTO posts_authors
+		(post_slug, author_user_id)
+		VALUES (?, ?)`)
+	if err != nil {
+		return err
+	}
+	for _, authorId := range authorIds {
+		_, err := addAuthorStmt.Exec(slug, authorId)
+		if err != nil {
+			return err
+		}
+	}
+
+	tx.Commit()
+	return nil
+}
+
 func (m PostModel) Delete(slug string) error {
 	tx, err := m.DB.Begin()
 	if err != nil {
@@ -221,6 +265,11 @@ func (m PostModel) Delete(slug string) error {
 	}
 
 	_, err = tx.Exec(`DELETE FROM posts_publication WHERE post_slug = ?`, slug)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`DELETE FROM posts_authors WHERE post_slug = ?`, slug)
 	if err != nil {
 		return err
 	}
