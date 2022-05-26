@@ -72,5 +72,13 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		})
 	})
 
+	r.Route("/authors/me", func(r chi.Router) {
+		r.Use(EnsureValidToken())
+		r.Use(env.AuthorEndpoint())
+
+		r.Get("/", env.AuthorsMeGet)
+		r.Put("/", env.AuthorsMePut)
+	})
+
 	return r
 }

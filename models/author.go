@@ -105,3 +105,20 @@ func (m AuthorModel) Add(author *Author) error {
 
 	return nil
 }
+
+func (m AuthorModel) Update(newAuthor *Author) error {
+	_, err := m.Get(newAuthor.UserId) // TODO: use COUNT(*) instead
+	if err != nil {
+		return err
+	}
+
+	_, err = m.DB.Exec(`
+		UPDATE authors
+		SET full_name=?, email=?, bio=?
+		WHERE user_id=?`, newAuthor.FullName, newAuthor.Email, newAuthor.Bio, newAuthor.UserId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
