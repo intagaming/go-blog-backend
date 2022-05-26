@@ -177,7 +177,9 @@ func (m PostModel) Add(post *Post) error {
 		return err
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -297,7 +299,9 @@ func (m PostModel) Delete(slug string) error {
 		return err
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }
 
