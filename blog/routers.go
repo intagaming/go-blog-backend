@@ -51,5 +51,26 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		})
 	})
 
+	r.Route("/pages", func(r chi.Router) {
+		// Unauthenticated endpoints
+		r.Get("/", env.PagesGet)
+		r.With(env.PageContext).Get("/{slug}", env.PageGet)
+
+		// Authenticated endpoints for Authors
+		r.Route("/", func(r chi.Router) {
+			r.Use(EnsureValidToken())
+			r.Use(env.AuthorEndpoint())
+
+			r.Post("/", env.PagesPost)
+
+			r.Route("/{slug}", func(r chi.Router) {
+				r.Use(env.PageContext)
+				r.Use(env.AuthorOfPage()) // requires author to be among the authors of the page
+				r.Put("/", env.PagePut)
+				r.Delete("/", env.PageDelete)
+			})
+		})
+	})
+
 	return r
 }

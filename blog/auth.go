@@ -137,3 +137,19 @@ func (env *Env) AuthorOfPost() func(next http.Handler) http.Handler {
 		})
 	}
 }
+
+func (env *Env) AuthorOfPage() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			page := r.Context().Value(pageCtxKey{}).(*models.Page)
+			author := r.Context().Value(authorCtxKey{}).(*models.Author)
+
+			if !page.IsAuthor(author) {
+				render.Render(w, r, ErrForbidden(errors.New("you must be the among the authors of the page in order to access this resource")))
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
