@@ -156,6 +156,8 @@ func (m PageModel) Add(page *Page) error {
 	if err != nil {
 		return err
 	}
+	defer addAuthorStmt.Close()
+
 	for _, author := range page.Authors {
 		if author.UserId == page.Author.UserId {
 			continue
@@ -241,6 +243,8 @@ func (m PageModel) Update(newPage *Page) error {
 	if err != nil {
 		return err
 	}
+	defer addAuthorStmt.Close()
+
 	for _, author := range newPage.Authors {
 		if author.UserId == newPage.Author.UserId {
 			continue

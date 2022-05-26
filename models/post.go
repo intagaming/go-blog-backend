@@ -162,6 +162,8 @@ func (m PostModel) Add(post *Post) error {
 	if err != nil {
 		return err
 	}
+	defer addAuthorStmt.Close()
+
 	for _, author := range post.Authors {
 		if author.UserId == post.Author.UserId {
 			continue
@@ -247,6 +249,8 @@ func (m PostModel) Update(newPost *Post) error {
 	if err != nil {
 		return err
 	}
+	defer addAuthorStmt.Close()
+
 	for _, author := range newPost.Authors {
 		if author.UserId == newPost.Author.UserId {
 			continue
