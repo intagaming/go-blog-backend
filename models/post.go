@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"hxann.com/blog/blog/constants"
 )
 
 type Post struct {
@@ -28,12 +30,6 @@ func (post *Post) IsAuthor(author *Author) bool {
 	}
 	return false
 }
-
-// type publishedAt []byte
-
-// func (pa publishedAt) Time() (time.Time, error) {
-// 	return time.Parse("2006-01-02 15:04:05", string(pa))
-// }
 
 type PostModel struct {
 	DB *sql.DB
@@ -144,7 +140,7 @@ func (m PostModel) Add(post *Post) error {
 	if post.Published {
 		if post.PublishedAt == "" {
 			now := time.Now()
-			post.PublishedAt = now.Format("2006-01-02 15:04:05")
+			post.PublishedAt = now.Format(constants.PublishedAtFormat)
 		}
 		_, err = tx.Exec(`
 			INSERT INTO posts_publication
@@ -211,7 +207,7 @@ func (m PostModel) Update(newPost *Post) error {
 	if !post.Published && newPost.Published {
 		if newPost.PublishedAt == "" {
 			now := time.Now()
-			newPost.PublishedAt = now.Format("2006-01-02 15:04:05")
+			newPost.PublishedAt = now.Format(constants.PublishedAtFormat)
 		}
 		_, err := tx.Exec(`
 			INSERT INTO posts_publication

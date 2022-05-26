@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-sql-driver/mysql"
+	"hxann.com/blog/blog/constants"
 	"hxann.com/blog/models"
 )
 
@@ -238,6 +240,12 @@ func (pr *PostRequest) Bind(r *http.Request) error {
 	if pr == nil {
 		return errors.New("missing required Post fields")
 	}
+
+	_, err := time.Parse(constants.PublishedAtFormat, pr.Post.PublishedAt)
+	if err != nil {
+		return fmt.Errorf("time must be in the format of %s", constants.PublishedAtFormat)
+	}
+
 	if pr.Published != nil {
 		pr.Post.Published = *pr.Published
 	}

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"hxann.com/blog/blog/constants"
 )
 
 type Page struct {
@@ -138,7 +140,7 @@ func (m PageModel) Add(page *Page) error {
 	if page.Published {
 		if page.PublishedAt == "" {
 			now := time.Now()
-			page.PublishedAt = now.Format("2006-01-02 15:04:05")
+			page.PublishedAt = now.Format(constants.PublishedAtFormat)
 		}
 		_, err = tx.Exec(`
 			INSERT INTO pages_publication
@@ -205,7 +207,7 @@ func (m PageModel) Update(newPage *Page) error {
 	if !page.Published && newPage.Published {
 		if newPage.PublishedAt == "" {
 			now := time.Now()
-			newPage.PublishedAt = now.Format("2006-01-02 15:04:05")
+			newPage.PublishedAt = now.Format(constants.PublishedAtFormat)
 		}
 		_, err := tx.Exec(`
 			INSERT INTO pages_publication
