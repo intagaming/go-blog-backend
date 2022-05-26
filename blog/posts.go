@@ -132,7 +132,7 @@ func (env *Env) PostGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
-	// author := r.Context().Value(AuthorCtxKey{}).(*models.Author)
+	author := r.Context().Value(authorCtxKey{}).(*models.Author)
 
 	post := r.Context().Value(postCtxKey{}).(*models.Post)
 
@@ -143,6 +143,9 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newPost := data.Post
+	if newPost == nil {
+		newPost = &models.Post{}
+	}
 	// Provides the slug from context
 	newPost.Slug = post.Slug
 	// Fill in missing fields
@@ -162,6 +165,13 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 	if newPost.PublishedAt == "" {
 		newPost.PublishedAt = post.PublishedAt
 	}
+
+	// if not the original author, they can't change authors
+	if author.UserId != post.Author.UserId && (data.Author != "" || data.Authors != nil) {
+		render.Render(w, r, ErrForbidden(errors.New("you must be the original author in order to change authors")))
+		return
+	}
+
 	if data.Author == "" {
 		newPost.Author = post.Author
 	} else {
@@ -173,11 +183,10 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 		}
 		newPost.Author = newOriginalAuthor
 	}
+
 	if data.Authors == nil {
 		newPost.Authors = post.Authors
 	} else {
-		// TODO: if not the original author, they can't change authors
-
 		authors, missingAuthorId, err := AuthorIdsToAuthors(data.Authors, env)
 		if err != nil {
 			if missingAuthorId != nil {
