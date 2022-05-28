@@ -61,3 +61,11 @@ func ErrForbidden(err error) render.Renderer {
 		Message: err.Error(),
 	}
 }
+
+func ErrUnauthorized(err error) render.Renderer {
+	return &ErrorResponse{
+		Err:     err,
+		Status:  http.StatusUnauthorized,
+		Message: err.Error(),
+	}
+}

@@ -57,10 +57,7 @@ func EnsureValidToken() func(next http.Handler) http.Handler {
 	errorHandler := func(w http.ResponseWriter, r *http.Request, err error) {
 		log.Printf("Encountered error while validating JWT: %v", err)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"message":"Failed to validate JWT."}`))
-		// TODO: standardize error response body
+		render.Render(w, r, ErrUnauthorized(errors.New("failed to validate JWT")))
 	}
 
 	middleware := jwtmiddleware.New(
@@ -87,6 +84,8 @@ func (c CustomClaims) HasScope(expectedScope string) bool {
 
 type requestAuthorCtxKey struct{}
 
+var errInsufficientScope = errors.New("insufficient scope")
+
 func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -94,9 +93,7 @@ func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 
 			claims := token.CustomClaims.(*CustomClaims)
 			if !claims.HasScope("author") {
-				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte(`{"message":"Insufficient scope."}`))
-				// TODO: standardize response
+				render.Render(w, r, ErrForbidden(errInsufficientScope))
 				return
 			}
 
@@ -163,9 +160,7 @@ func IsAdmin(r *http.Request) bool {
 func (env *Env) AdminEndpoint(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !IsAdmin(r) {
-			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(`{"message":"Insufficient scope."}`))
-			// TODO: standardize response
+			render.Render(w, r, ErrForbidden(errInsufficientScope))
 			return
 		}
 
