@@ -93,7 +93,7 @@ func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 			token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
 
 			claims := token.CustomClaims.(*CustomClaims)
-			if !claims.HasScope("author") && !claims.HasScope("admin") {
+			if !claims.HasScope("author") {
 				w.WriteHeader(http.StatusForbidden)
 				w.Write([]byte(`{"message":"Insufficient scope."}`))
 				// TODO: standardize response
@@ -128,7 +128,7 @@ func (env *Env) AuthorOfPost() func(next http.Handler) http.Handler {
 			post := r.Context().Value(postCtxKey{}).(*models.Post)
 			author := r.Context().Value(authorCtxKey{}).(*models.Author)
 
-			if !post.IsAuthor(author) {
+			if !post.IsAuthor(author) && !IsAdmin(r) {
 				render.Render(w, r, ErrForbidden(errors.New("you must be the among the authors of the post in order to access this resource")))
 				return
 			}
@@ -144,7 +144,7 @@ func (env *Env) AuthorOfPage() func(next http.Handler) http.Handler {
 			page := r.Context().Value(pageCtxKey{}).(*models.Page)
 			author := r.Context().Value(authorCtxKey{}).(*models.Author)
 
-			if !page.IsAuthor(author) {
+			if !page.IsAuthor(author) || !IsAdmin(r) {
 				render.Render(w, r, ErrForbidden(errors.New("you must be the among the authors of the page in order to access this resource")))
 				return
 			}
@@ -152,4 +152,10 @@ func (env *Env) AuthorOfPage() func(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func IsAdmin(r *http.Request) bool {
+	token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+	claims := token.CustomClaims.(*CustomClaims)
+	return claims.HasScope("admin")
 }

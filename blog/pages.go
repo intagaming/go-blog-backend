@@ -168,8 +168,8 @@ func (env *Env) PagePut(w http.ResponseWriter, r *http.Request) {
 		newPage.PublishedAt = page.PublishedAt
 	}
 
-	// if not the original author, they can't change authors
-	if author.UserId != page.Author.UserId && (data.Author != "" || data.Authors != nil) {
+	// if not the original author or blog's admin, they can't change authors
+	if !IsAdmin(r) && author.UserId != page.Author.UserId && (data.Author != "" || data.Authors != nil) {
 		render.Render(w, r, ErrForbidden(errors.New("you must be the original author in order to change authors")))
 		return
 	}
@@ -242,9 +242,9 @@ func (pr *PageRequest) Bind(r *http.Request) error {
 	}
 
 	if pr.Page.PublishedAt != "" {
-	_, err := time.Parse(constants.PublishedAtFormat, pr.Page.PublishedAt)
-	if err != nil {
-		return fmt.Errorf("time must be in the format of %s", constants.PublishedAtFormat)
+		_, err := time.Parse(constants.PublishedAtFormat, pr.Page.PublishedAt)
+		if err != nil {
+			return fmt.Errorf("time must be in the format of %s", constants.PublishedAtFormat)
 		}
 	}
 
