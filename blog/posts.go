@@ -241,9 +241,11 @@ func (pr *PostRequest) Bind(r *http.Request) error {
 		return errors.New("missing required Post fields")
 	}
 
+	if pr.Post.PublishedAt != "" {
 	_, err := time.Parse(constants.PublishedAtFormat, pr.Post.PublishedAt)
 	if err != nil {
 		return fmt.Errorf("time must be in the format of %s", constants.PublishedAtFormat)
+		}
 	}
 
 	if pr.Published != nil {
