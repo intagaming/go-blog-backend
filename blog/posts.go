@@ -34,7 +34,7 @@ func (env *Env) PostsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(authorCtxKey{}).(*models.Author)
+	author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
 
 	data := &PostRequest{}
 	if err := render.Bind(r, data); err != nil {
@@ -134,7 +134,7 @@ func (env *Env) PostGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(authorCtxKey{}).(*models.Author)
+	author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
 
 	post := r.Context().Value(postCtxKey{}).(*models.Post)
 

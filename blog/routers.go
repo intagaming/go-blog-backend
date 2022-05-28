@@ -72,12 +72,20 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		})
 	})
 
-	r.Route("/authors/me", func(r chi.Router) {
-		r.Use(EnsureValidToken())
-		r.Use(env.AuthorEndpoint())
+	r.Route("/authors", func(r chi.Router) {
+		r.Route("/me", func(r chi.Router) {
+			r.Use(EnsureValidToken())
+			r.Use(env.AuthorEndpoint())
 
-		r.Get("/", env.AuthorsMeGet)
-		r.Put("/", env.AuthorsMePut)
+			r.Get("/", env.AuthorsMeGet)
+			r.Put("/", env.AuthorsMePut)
+		})
+
+		r.Route("/{user_id}", func(r chi.Router) {
+			r.Use(env.AuthorContext)
+			r.Get("/", env.AuthorGet)
+			r.With(EnsureValidToken(), env.AdminEndpoint).Put("/", env.AuthorPut)
+		})
 	})
 
 	return r

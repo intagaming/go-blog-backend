@@ -34,7 +34,7 @@ func (env *Env) PagesGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PagesPost(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(authorCtxKey{}).(*models.Author)
+	author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
 
 	data := &PageRequest{}
 	if err := render.Bind(r, data); err != nil {
@@ -134,7 +134,7 @@ func (env *Env) PageGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) PagePut(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(authorCtxKey{}).(*models.Author)
+	author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
 
 	page := r.Context().Value(pageCtxKey{}).(*models.Page)
 

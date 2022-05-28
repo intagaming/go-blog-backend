@@ -85,7 +85,7 @@ func (c CustomClaims) HasScope(expectedScope string) bool {
 	return false
 }
 
-type authorCtxKey struct{}
+type requestAuthorCtxKey struct{}
 
 func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -115,7 +115,7 @@ func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 				}
 			}
 			// set Author to the context
-			ctx := context.WithValue(r.Context(), authorCtxKey{}, author)
+			ctx := context.WithValue(r.Context(), requestAuthorCtxKey{}, author)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -126,7 +126,7 @@ func (env *Env) AuthorOfPost() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			post := r.Context().Value(postCtxKey{}).(*models.Post)
-			author := r.Context().Value(authorCtxKey{}).(*models.Author)
+			author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
 
 			if !post.IsAuthor(author) && !IsAdmin(r) {
 				render.Render(w, r, ErrForbidden(errors.New("you must be the among the authors of the post in order to access this resource")))
@@ -142,7 +142,7 @@ func (env *Env) AuthorOfPage() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			page := r.Context().Value(pageCtxKey{}).(*models.Page)
-			author := r.Context().Value(authorCtxKey{}).(*models.Author)
+			author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
 
 			if !page.IsAuthor(author) || !IsAdmin(r) {
 				render.Render(w, r, ErrForbidden(errors.New("you must be the among the authors of the page in order to access this resource")))
@@ -158,4 +158,17 @@ func IsAdmin(r *http.Request) bool {
 	token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
 	claims := token.CustomClaims.(*CustomClaims)
 	return claims.HasScope("admin")
+}
+
+func (env *Env) AdminEndpoint(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !IsAdmin(r) {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(`{"message":"Insufficient scope."}`))
+			// TODO: standardize response
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
