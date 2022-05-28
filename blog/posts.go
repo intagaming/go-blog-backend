@@ -258,6 +258,10 @@ type PostResponse struct {
 	*models.Post
 	Authors []*AuthorResponse `json:"authors"`
 	// TODO: coverUrl, lastPostSlug, nextPostSlug
+
+	// last_post_slug and next_post_slug are nullable, semantically.
+	LastPostSlug *string `json:"last_post_slug"`
+	NextPostSlug *string `json:"next_post_slug"`
 }
 
 func (resp *PostResponse) Render(w http.ResponseWriter, r *http.Request) error {
@@ -274,6 +278,18 @@ func NewPostResponse(post *models.Post, env *Env) (*PostResponse, error) {
 	}
 	authorsResp := NewAuthorListResponse(authors)
 	resp.Authors = authorsResp
+
+	// Fetch LastPostSlug & NextPostSlug
+	last, next, err := env.posts.GetLastAndNextPostSlug(post.Slug)
+	if err != nil {
+		return nil, err
+	}
+	if last != "" {
+		resp.LastPostSlug = &last
+	}
+	if next != "" {
+		resp.NextPostSlug = &next
+	}
 
 	return resp, nil
 }

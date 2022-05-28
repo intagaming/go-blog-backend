@@ -336,3 +336,34 @@ func (m PostModel) FillAuthors(post *Post) error {
 	post.Authors = authors
 	return nil
 }
+
+// TODO: might have non-repeatable read problem here, because in-between these 2
+// queries, the data in the table might change.
+func (m PostModel) GetLastAndNextPostSlug(slug string) (last string, next string, err error) {
+	err = m.DB.QueryRow(`
+		SELECT post_slug
+		FROM posts_publication
+		WHERE published_at < (
+			SELECT published_at FROM posts_publication WHERE post_slug = ?
+		)
+		ORDER BY published_at DESC
+		LIMIT 1`, slug).Scan(&last)
+	if err != nil && err != sql.ErrNoRows {
+		return
+	}
+
+	err = m.DB.QueryRow(`
+		SELECT post_slug
+		FROM posts_publication
+		WHERE published_at > (
+			SELECT published_at FROM posts_publication WHERE post_slug = ?
+		)
+		ORDER BY published_at ASC
+		LIMIT 1`, slug).Scan(&next)
+	if err != nil && err != sql.ErrNoRows {
+		return
+	}
+
+	err = nil
+	return
+}
