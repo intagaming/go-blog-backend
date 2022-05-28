@@ -59,7 +59,6 @@ func (env *Env) AuthorPut(w http.ResponseWriter, r *http.Request) {
 	}
 	newAuthor.UserId = author.UserId
 	// Fill in missing fields
-	// TODO: improve this
 	if newAuthor.FullName == "" {
 		newAuthor.FullName = author.FullName
 	}
@@ -104,7 +103,6 @@ func (env *Env) AuthorsMePut(w http.ResponseWriter, r *http.Request) {
 	}
 	newAuthor.UserId = author.UserId
 	// Fill in missing fields
-	// TODO: improve this
 	if newAuthor.FullName == "" {
 		newAuthor.FullName = author.FullName
 	}

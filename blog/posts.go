@@ -151,7 +151,6 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 	// Provides the slug from context
 	newPost.Slug = post.Slug
 	// Fill in missing fields
-	// TODO: improve this
 	if newPost.Title == "" {
 		newPost.Title = post.Title
 	}

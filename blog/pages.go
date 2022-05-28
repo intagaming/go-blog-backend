@@ -151,7 +151,6 @@ func (env *Env) PagePut(w http.ResponseWriter, r *http.Request) {
 	// Provides the slug from context
 	newPage.Slug = page.Slug
 	// Fill in missing fields
-	// TODO: improve this
 	if newPage.Title == "" {
 		newPage.Title = page.Title
 	}
