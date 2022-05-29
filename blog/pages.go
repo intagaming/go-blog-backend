@@ -240,7 +240,7 @@ func (pr *PageRequest) Bind(r *http.Request) error {
 		return errors.New("missing required Page fields")
 	}
 
-	if pr.Page.PublishedAt != "" {
+	if pr.Page != nil && pr.Page.PublishedAt != "" {
 		_, err := time.Parse(constants.PublishedAtFormat, pr.Page.PublishedAt)
 		if err != nil {
 			return fmt.Errorf("time must be in the format of %s", constants.PublishedAtFormat)
