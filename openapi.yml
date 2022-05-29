@@ -1,227 +1,362 @@
-openapi: "3.0.3"
+openapi: 3.0.3
 info:
   title: Go Blog API
-  version: "1.0"
+  version: '1.0'
 paths:
-  /posts/{slug}:
+  /posts:
     get:
-      summary: Returns a post's details
+      summary: Returns all blog posts
+      tags:
+        - posts
       parameters:
-        - $ref: "#/components/parameters/slug"
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/sort'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostResponse"
-        "404":
-          description: Post not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errorResponse"
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostResponse'
+        '500':
+          $ref: '#/components/responses/ErrInternal'
+      description: ''
     post:
       summary: Create a post
-      parameters:
-        - $ref: "#/components/parameters/slug"
+      tags:
+        - posts
+      security:
+        - oAuth:
+            - author
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Post"
+              $ref: '#/components/schemas/PostRequest'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostResponse"
-        "403":
+                $ref: '#/components/schemas/PostResponse'
+        '400':
+          $ref: '#/components/responses/ErrInvalidRequest'
+        '404':
+          $ref: '#/components/responses/ErrNotFound'
+        '409':
           description: A post with that slug is existed.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/errorResponse"
+                $ref: '#/components/schemas/errorResponse'
+        '500':
+          $ref: '#/components/responses/ErrInternal'
+  '/posts/{slug}':
+    get:
+      summary: Returns a post's details
+      tags:
+        - posts
+      parameters:
+        - $ref: '#/components/parameters/slug'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '404':
+          $ref: '#/components/responses/ErrNotFound'
+        '500':
+          $ref: '#/components/responses/ErrInternal'
     put:
       summary: Edit a post
+      tags:
+        - posts
       parameters:
-        - $ref: "#/components/parameters/slug"
+        - $ref: '#/components/parameters/slug'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Post"
+              $ref: '#/components/schemas/PostRequest'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostResponse"
-        "403":
-          description: Access denied.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errorResponse"
+                $ref: '#/components/schemas/PostResponse'
+        '400':
+          $ref: '#/components/responses/ErrInvalidRequest'
+        '403':
+          $ref: '#/components/responses/ErrForbidden'
+        '404':
+          $ref: '#/components/responses/ErrNotFound'
+        '500':
+          $ref: '#/components/responses/ErrInternal'
     delete:
       summary: Delete a post
+      tags:
+        - posts
       parameters:
-        - $ref: "#/components/parameters/slug"
+        - $ref: '#/components/parameters/slug'
       responses:
-        "200":
+        '204':
+          description: OK
+        '403':
+          $ref: '#/components/responses/ErrForbidden'
+        '404':
+          $ref: '#/components/responses/ErrNotFound'
+        '500':
+          $ref: '#/components/responses/ErrInternal'
+    parameters:
+      - $ref: '#/components/parameters/slug'
+  '/posts/{slug}/cover_url':
+    parameters:
+      - $ref: '#/components/parameters/slug'
+    put:
+      summary: Change post's cover image
+      operationId: put-posts-slug-cover_url
+      responses:
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostResponse"
-        "403":
-          description: Access denied.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errorResponse"
-        "404":
-          description: Post not found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errorResponse"
-  /posts:
+                $ref: '#/components/schemas/Post'
+        '404':
+          $ref: '#/components/responses/ErrNotFound'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties: {}
+      security:
+        - oAuth:
+            - author
+  /pages:
     get:
-      summary: Returns all blog posts
+      summary: Returns all pages
+      tags:
+        - pages
       parameters:
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/pageSize"
-        - $ref: "#/components/parameters/sort"
+        - $ref: '#/components/parameters/sort'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PostResponse"
-  /pages/{slug}:
-    get:
-      summary: Returns a page's details
-      parameters:
-        - $ref: "#/components/parameters/slug"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PageResponse"
-        "404":
-          description: Page not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errorResponse"
+                  $ref: '#/components/schemas/PageResponse'
     post:
       summary: Create a page
-      parameters:
-        - $ref: "#/components/parameters/slug"
+      tags:
+        - pages
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Page"
+              $ref: '#/components/schemas/Page'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PageResponse"
-        "403":
+                $ref: '#/components/schemas/PageResponse'
+        '403':
           description: A page with that slug is existed.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/errorResponse"
+                $ref: '#/components/schemas/errorResponse'
+  '/pages/{slug}':
+    get:
+      summary: Returns a page's details
+      tags:
+        - pages
+      parameters:
+        - $ref: '#/components/parameters/slug'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+        '404':
+          description: Page not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
     put:
       summary: Edit a page
+      tags:
+        - pages
       parameters:
-        - $ref: "#/components/parameters/slug"
+        - $ref: '#/components/parameters/slug'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Page"
+              $ref: '#/components/schemas/Page'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PageResponse"
-        "403":
+                $ref: '#/components/schemas/PageResponse'
+        '403':
           description: Access denied.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/errorResponse"
+                $ref: '#/components/schemas/errorResponse'
     delete:
       summary: Delete a page
+      tags:
+        - pages
       parameters:
-        - $ref: "#/components/parameters/slug"
+        - $ref: '#/components/parameters/slug'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PageResponse"
-        "403":
+                $ref: '#/components/schemas/PageResponse'
+        '403':
           description: Access denied.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/errorResponse"
-        "404":
+                $ref: '#/components/schemas/errorResponse'
+        '404':
           description: Page not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/errorResponse"
-  /pages:
+                $ref: '#/components/schemas/errorResponse'
+    parameters:
+      - $ref: '#/components/parameters/slug'
+  /authors/me:
     get:
-      summary: Returns all pages
-      parameters:
-        - $ref: "#/components/parameters/sort"
+      summary: See your own author profile
+      tags:
+        - authors
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/PageResponse"
+                $ref: '#/components/schemas/Author'
+        '403':
+          $ref: '#/components/responses/ErrForbidden'
+    put:
+      summary: Update your author profile
+      tags:
+        - authors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Author'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+        '403':
+          $ref: '#/components/responses/ErrForbidden'
+  '/authors/{user_id}':
+    get:
+      summary: Get author's profile
+      tags:
+        - authors
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+        '403':
+          $ref: '#/components/responses/ErrForbidden'
+        '404':
+          $ref: '#/components/responses/ErrNotFound'
+      operationId: ''
+    put:
+      summary: Update the author's profile
+      tags:
+        - authors
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+      security:
+        - oAuth:
+            - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Author'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+        '403':
+          $ref: '#/components/responses/ErrForbidden'
+        '404':
+          $ref: '#/components/responses/ErrNotFound'
+    parameters:
+      - $ref: '#/components/parameters/user_id'
 components:
   schemas:
     sort:
       type: string
       description: |
         Sort by a field in ascending (ASC) or descending (DESC) order.
-      pattern: "/^.+_(ASC|DESC)$/i"
-      example: "fieldName_DESC"
+      pattern: ^.+_(ASC|DESC)$
+      example: fieldName_DESC
     Post:
       type: object
       allOf:
-        - $ref: "#/components/schemas/Page"
+        - $ref: '#/components/schemas/Page'
         - properties:
             coverUrl:
               type: string
+    PostRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Post'
+        - properties:
+            authors:
+              type: array
+              description: An array of userIds of the authors
+              items:
+                type: string
+                description: The userId of the author
     PostResponse:
       type: object
       allOf:
-        - $ref: "#/components/schemas/Post"
+        - $ref: '#/components/schemas/Post'
         - properties:
             lastPostSlug:
               type: string
@@ -237,8 +372,8 @@ components:
         message:
           type: string
       required:
-        - "status"
-        - "message"
+        - status
+        - message
     Page:
       type: object
       properties:
@@ -247,7 +382,7 @@ components:
         authors:
           type: array
           items:
-            $ref: "#/components/schemas/Author"
+            $ref: '#/components/schemas/Author'
         title:
           type: string
         excerpt:
@@ -260,7 +395,7 @@ components:
     PageResponse:
       type: object
       allOf:
-        - $ref: "#/components/schemas/Page"
+        - $ref: '#/components/schemas/Page'
         - properties: {}
     User:
       type: object
@@ -270,12 +405,12 @@ components:
           description: |
             This field is the `sub` claim in the OpenID Connect's JWT.
       required:
-        - "userId"
+        - userId
     Author:
       type: object
       description: Author is an User that can author their posts.
       allOf:
-        - $ref: "#/components/schemas/User"
+        - $ref: '#/components/schemas/User'
         - properties:
             fullName:
               type: string
@@ -284,9 +419,9 @@ components:
             bio:
               type: string
       required:
-        - "fullName"
-        - "email"
-        - "bio"
+        - fullName
+        - email
+        - bio
   parameters:
     slug:
       name: slug
@@ -301,20 +436,20 @@ components:
         type: string
       examples:
         firstExample:
-          value: "the-first-blog-post"
+          value: the-first-blog-post
         secondExample:
-          value: "the-second-blog-post"
+          value: the-second-blog-post
     page:
       name: page
       in: query
-      description: "The page number to query if a query needs pagination."
+      description: The page number to query if a query needs pagination.
       schema:
         type: integer
         minimum: 1
     pageSize:
       name: pageSize
       in: query
-      description: "The number of items in a page if a query needs pagination."
+      description: The number of items in a page if a query needs pagination.
       schema:
         type: integer
         minimum: 1
@@ -327,7 +462,57 @@ components:
 
         By default, posts are sorted by publishedAt in descending order.
       schema:
-        $ref: "#/components/schemas/sort"
+        $ref: '#/components/schemas/sort'
       examples:
         sortByDateAscending:
-          value: "publishedAt_ASC"
+          value: publishedAt_ASC
+    user_id:
+      name: user_id
+      in: path
+      required: true
+      description: User id
+      schema:
+        type: string
+  securitySchemes:
+    oAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://dev-wy79rbxh.us.auth0.com/authorize?audience=https://hxann.com/blog'
+          tokenUrl: 'https://dev-wy79rbxh.us.auth0.com/oauth/token'
+          scopes:
+            author: Author
+            admin: Admin
+  responses:
+    ErrInternal:
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    ErrInvalidRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    ErrNotFound:
+      description: Something is not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    ErrForbidden:
+      description: Access denied.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+security:
+  - oAuth:
+      - author
+      - admin
+tags:
+  - name: authors
+  - name: pages
+  - name: posts
