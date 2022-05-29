@@ -3,9 +3,6 @@ package models
 import (
 	"database/sql"
 	"errors"
-	"time"
-
-	"hxann.com/blog/blog/constants"
 )
 
 type Post struct {
@@ -15,6 +12,7 @@ type Post struct {
 	Content     string    `json:"content"`
 	Published   bool      `json:"published"`
 	PublishedAt string    `json:"published_at,omitempty"`
+	ModifiedAt  string    `json:"modified_at"`
 	Author      *Author   `json:"author"`
 	Authors     []*Author `json:"authors,omitempty"`
 	CoverUrl    *string   `json:"cover_url"`
@@ -39,7 +37,7 @@ type PostModel struct {
 func (m PostModel) All() ([]*Post, error) {
 	// Fetch all posts' information
 	rows, err := m.DB.Query(`
-		SELECT slug, title, excerpt, content
+		SELECT slug, title, excerpt, content, modified_at
 		FROM posts`)
 	if err != nil {
 		return nil, err
@@ -96,7 +94,7 @@ func (m PostModel) All() ([]*Post, error) {
 	for rows.Next() {
 		var post Post
 
-		err := rows.Scan(&post.Slug, &post.Title, &post.Excerpt, &post.Content)
+		err := rows.Scan(&post.Slug, &post.Title, &post.Excerpt, &post.Content, &post.ModifiedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -126,9 +124,9 @@ func (m PostModel) Get(slug string) (*Post, error) {
 	var post Post = Post{Slug: slug}
 
 	err := m.DB.QueryRow(`
-		SELECT title, excerpt, content
+		SELECT title, excerpt, content, modified_at
 		FROM posts
-		WHERE slug = ?`, slug).Scan(&post.Title, &post.Excerpt, &post.Content)
+		WHERE slug = ?`, slug).Scan(&post.Title, &post.Excerpt, &post.Content, &post.ModifiedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -170,16 +168,15 @@ func (m PostModel) Add(post *Post) error {
 
 	_, err = tx.Exec(`
 		INSERT INTO posts
-		(slug, title, excerpt, content)
-		VALUES (?, ?, ?, ?)`, post.Slug, post.Title, post.Excerpt, post.Content)
+		(slug, title, excerpt, content, modified_at)
+		VALUES (?, ?, ?, ?, ?)`, post.Slug, post.Title, post.Excerpt, post.Content, CurrentTime())
 	if err != nil {
 		return err
 	}
 
 	if post.Published {
 		if post.PublishedAt == "" {
-			now := time.Now()
-			post.PublishedAt = now.Format(constants.PublishedAtFormat)
+			post.PublishedAt = CurrentTime()
 		}
 		_, err = tx.Exec(`
 			INSERT INTO posts_publication
@@ -244,19 +241,19 @@ func (m PostModel) Update(newPost *Post) error {
 	}
 	defer tx.Rollback()
 
+	now := CurrentTime()
 	_, err = tx.Exec(`
 		UPDATE posts
-		SET title=?, excerpt=?, content=?
-		WHERE slug=?`, newPost.Title, newPost.Excerpt, newPost.Content, newPost.Slug)
-
+		SET title=?, excerpt=?, content=?, modified_at=?
+		WHERE slug=?`, newPost.Title, newPost.Excerpt, newPost.Content, now, newPost.Slug)
 	if err != nil {
 		return err
 	}
+	newPost.ModifiedAt = now
 
 	if !post.Published && newPost.Published {
 		if newPost.PublishedAt == "" {
-			now := time.Now()
-			newPost.PublishedAt = now.Format(constants.PublishedAtFormat)
+			newPost.PublishedAt = CurrentTime()
 		}
 		_, err := tx.Exec(`
 			INSERT INTO posts_publication
