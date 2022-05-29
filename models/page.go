@@ -12,6 +12,7 @@ type Page struct {
 	Content     string    `json:"content"`
 	Published   bool      `json:"published"`
 	PublishedAt string    `json:"published_at,omitempty"`
+	ModifiedAt  string    `json:"modified_at"`
 	Author      *Author   `json:"author"`
 	Authors     []*Author `json:"authors,omitempty"`
 }
@@ -34,7 +35,7 @@ type PageModel struct {
 
 func (m PageModel) All() ([]*Page, error) {
 	rows, err := m.DB.Query(`
-		SELECT slug, title, excerpt, content
+		SELECT slug, title, excerpt, content, modified_at
 		FROM pages`)
 	if err != nil {
 		return nil, err
@@ -68,7 +69,7 @@ func (m PageModel) All() ([]*Page, error) {
 	for rows.Next() {
 		var page Page
 
-		err := rows.Scan(&page.Slug, &page.Title, &page.Excerpt, &page.Content)
+		err := rows.Scan(&page.Slug, &page.Title, &page.Excerpt, &page.Content, &page.ModifiedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -94,9 +95,9 @@ func (m PageModel) Get(slug string) (*Page, error) {
 	var page Page = Page{Slug: slug}
 
 	err := m.DB.QueryRow(`
-		SELECT title, excerpt, content
+		SELECT title, excerpt, content, modified_at
 		FROM pages
-		WHERE slug = ?`, slug).Scan(&page.Title, &page.Excerpt, &page.Content)
+		WHERE slug = ?`, slug).Scan(&page.Title, &page.Excerpt, &page.Content, &page.ModifiedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -128,8 +129,8 @@ func (m PageModel) Add(page *Page) error {
 
 	_, err = tx.Exec(`
 		INSERT INTO pages
-		(slug, title, excerpt, content)
-		VALUES (?, ?, ?, ?)`, page.Slug, page.Title, page.Excerpt, page.Content)
+		(slug, title, excerpt, content, modified_at)
+		VALUES (?, ?, ?, ?, ?)`, page.Slug, page.Title, page.Excerpt, page.Content, CurrentTime())
 	if err != nil {
 		return err
 	}
@@ -191,14 +192,15 @@ func (m PageModel) Update(newPage *Page) error {
 	}
 	defer tx.Rollback()
 
+	now := CurrentTime()
 	_, err = tx.Exec(`
 		UPDATE pages
-		SET title=?, excerpt=?, content=?
-		WHERE slug=?`, newPage.Title, newPage.Excerpt, newPage.Content, newPage.Slug)
-
+		SET title=?, excerpt=?, content=?, modified_at=?
+		WHERE slug=?`, newPage.Title, newPage.Excerpt, newPage.Content, now, newPage.Slug)
 	if err != nil {
 		return err
 	}
+	newPage.ModifiedAt = now
 
 	if !page.Published && newPage.Published {
 		if newPage.PublishedAt == "" {
