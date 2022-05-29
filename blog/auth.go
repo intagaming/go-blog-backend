@@ -141,7 +141,7 @@ func (env *Env) AuthorOfPage() func(next http.Handler) http.Handler {
 			page := r.Context().Value(pageCtxKey{}).(*models.Page)
 			author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
 
-			if !page.IsAuthor(author) || !IsAdmin(r) {
+			if !page.IsAuthor(author) && !IsAdmin(r) {
 				render.Render(w, r, ErrForbidden(errors.New("you must be the among the authors of the page in order to access this resource")))
 				return
 			}
