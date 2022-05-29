@@ -257,7 +257,6 @@ func (pr *PostRequest) Bind(r *http.Request) error {
 type PostResponse struct {
 	*models.Post
 	Authors []*AuthorResponse `json:"authors"`
-	// TODO: coverUrl, lastPostSlug, nextPostSlug
 
 	// last_post_slug and next_post_slug are nullable, semantically.
 	LastPostSlug *string `json:"last_post_slug"`

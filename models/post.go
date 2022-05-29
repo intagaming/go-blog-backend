@@ -17,6 +17,7 @@ type Post struct {
 	PublishedAt string    `json:"published_at,omitempty"`
 	Author      *Author   `json:"author"`
 	Authors     []*Author `json:"authors,omitempty"`
+	CoverUrl    *string   `json:"cover_url"`
 }
 
 func (post *Post) IsAuthor(author *Author) bool {
@@ -36,6 +37,7 @@ type PostModel struct {
 }
 
 func (m PostModel) All() ([]*Post, error) {
+	// Fetch all posts' information
 	rows, err := m.DB.Query(`
 		SELECT slug, title, excerpt, content
 		FROM posts`)
@@ -66,6 +68,29 @@ func (m PostModel) All() ([]*Post, error) {
 		return nil, err
 	}
 
+	coverUrlRows, err := m.DB.Query(`
+		SELECT post_slug, cover_url
+		FROM posts_cover_url`)
+	if err != nil {
+		return nil, err
+	}
+	defer publishedRows.Close()
+
+	coverUrls := make(map[string]string)
+	for coverUrlRows.Next() {
+		var slug string
+		var coverUrl string
+		err := coverUrlRows.Scan(&slug, &coverUrl)
+		if err != nil {
+			return nil, err
+		}
+		coverUrls[slug] = coverUrl
+	}
+	if err = coverUrlRows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Populating a list of posts
 	var posts []*Post
 
 	for rows.Next() {
@@ -82,6 +107,10 @@ func (m PostModel) All() ([]*Post, error) {
 		}
 
 		m.FillAuthors(&post)
+
+		if coverUrl, ok := coverUrls[post.Slug]; ok {
+			post.CoverUrl = &coverUrl
+		}
 
 		posts = append(posts, &post)
 	}
@@ -105,7 +134,6 @@ func (m PostModel) Get(slug string) (*Post, error) {
 	}
 
 	var timeBytes []byte
-
 	err = m.DB.QueryRow(`
 		SELECT published_at
 		FROM posts_publication
@@ -118,6 +146,17 @@ func (m PostModel) Get(slug string) (*Post, error) {
 	}
 
 	m.FillAuthors(&post)
+
+	var coverUrl string
+	err = m.DB.QueryRow(`
+		SELECT cover_url
+		FROM posts_cover_url
+		WHERE post_slug = ?`, slug).Scan(&coverUrl)
+	if err == nil {
+		post.CoverUrl = &coverUrl
+	} else if err != sql.ErrNoRows {
+		return nil, err
+	}
 
 	return &post, nil
 }
@@ -146,9 +185,19 @@ func (m PostModel) Add(post *Post) error {
 			INSERT INTO posts_publication
 			(post_slug, published_at)
 			VALUES (?, ?)`, post.Slug, post.PublishedAt)
+		if err != nil {
+			return err
+		}
 	}
-	if err != nil {
-		return err
+
+	if post.CoverUrl != nil {
+		_, err = tx.Exec(`
+			INSERT INTO posts_cover_url
+			(post_slug, cover_url)
+			VALUES (?, ?)`, post.Slug, *post.CoverUrl)
+		if err != nil {
+			return err
+		}
 	}
 
 	addAuthorStmt, err := tx.Prepare(`
@@ -233,6 +282,18 @@ func (m PostModel) Update(newPost *Post) error {
 		}
 	}
 
+	if newPost.CoverUrl != nil {
+		_, err = tx.Exec(`
+			INSERT INTO posts_cover_url
+			(post_slug, cover_url)
+			VALUES (?, ?)
+			ON DUPLICATE KEY UPDATE cover_url = ?
+			`, newPost.Slug, *newPost.CoverUrl, *newPost.CoverUrl)
+		if err != nil {
+			return err
+		}
+	}
+
 	_, err = tx.Exec(`DELETE FROM posts_authors WHERE post_slug = ?`, newPost.Slug)
 	if err != nil {
 		return err
@@ -290,6 +351,11 @@ func (m PostModel) Delete(slug string) error {
 	}
 
 	_, err = tx.Exec(`DELETE FROM posts_publication WHERE post_slug = ?`, slug)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`DELETE FROM posts_cover_url WHERE post_slug = ?`, slug)
 	if err != nil {
 		return err
 	}
