@@ -86,7 +86,8 @@ type requestAuthorCtxKey struct{}
 
 var errInsufficientScope = errors.New("insufficient scope")
 
-func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
+// RequiresAuthor requires the request to be authenticated as an author.
+func (env *Env) RequiresAuthor() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
@@ -119,7 +120,9 @@ func (env *Env) AuthorEndpoint() func(next http.Handler) http.Handler {
 	}
 }
 
-func (env *Env) AuthorOfPost() func(next http.Handler) http.Handler {
+// RequiresAuthorOfPost requires the request to be authenticated as the author
+// of the subjected post.
+func (env *Env) RequiresAuthorOfPost() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			post := r.Context().Value(postCtxKey{}).(*models.Post)
@@ -135,7 +138,9 @@ func (env *Env) AuthorOfPost() func(next http.Handler) http.Handler {
 	}
 }
 
-func (env *Env) AuthorOfPage() func(next http.Handler) http.Handler {
+// RequiresAuthorOfPage requires the request to be authenticated as the author
+// of the subjected page.
+func (env *Env) RequiresAuthorOfPage() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			page := r.Context().Value(pageCtxKey{}).(*models.Page)
@@ -151,13 +156,15 @@ func (env *Env) AuthorOfPage() func(next http.Handler) http.Handler {
 	}
 }
 
+// IsAdmin checks if the request is authenticated as an admin.
 func IsAdmin(r *http.Request) bool {
 	token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
 	claims := token.CustomClaims.(*CustomClaims)
 	return claims.HasScope("admin")
 }
 
-func (env *Env) AdminEndpoint(next http.Handler) http.Handler {
+// RequiresAdmin requires the request to be authenticated as an admin.
+func (env *Env) RequiresAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !IsAdmin(r) {
 			render.Render(w, r, ErrForbidden(errInsufficientScope))

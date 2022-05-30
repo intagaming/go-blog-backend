@@ -38,13 +38,13 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		// Authenticated endpoints for Authors
 		r.Route("/", func(r chi.Router) {
 			r.Use(EnsureValidToken())
-			r.Use(env.AuthorEndpoint())
+			r.Use(env.RequiresAuthor())
 
 			r.Post("/", env.PostsPost)
 
 			r.Route("/{slug}", func(r chi.Router) {
 				r.Use(env.PostContext)
-				r.Use(env.AuthorOfPost()) // requires author to be among the authors of the post
+				r.Use(env.RequiresAuthorOfPost()) // requires author to be among the authors of the post
 				r.Put("/", env.PostPut)
 				r.Delete("/", env.PostDelete)
 			})
@@ -59,13 +59,13 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		// Authenticated endpoints for Authors
 		r.Route("/", func(r chi.Router) {
 			r.Use(EnsureValidToken())
-			r.Use(env.AuthorEndpoint())
+			r.Use(env.RequiresAuthor())
 
 			r.Post("/", env.PagesPost)
 
 			r.Route("/{slug}", func(r chi.Router) {
 				r.Use(env.PageContext)
-				r.Use(env.AuthorOfPage()) // requires author to be among the authors of the page
+				r.Use(env.RequiresAuthorOfPage()) // requires author to be among the authors of the page
 				r.Put("/", env.PagePut)
 				r.Delete("/", env.PageDelete)
 			})
@@ -75,7 +75,7 @@ func NewRouter(db *sql.DB) *chi.Mux {
 	r.Route("/authors", func(r chi.Router) {
 		r.Route("/me", func(r chi.Router) {
 			r.Use(EnsureValidToken())
-			r.Use(env.AuthorEndpoint())
+			r.Use(env.RequiresAuthor())
 
 			r.Get("/", env.AuthorsMeGet)
 			r.Put("/", env.AuthorsMePut)
@@ -84,7 +84,7 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		r.Route("/{user_id}", func(r chi.Router) {
 			r.Use(env.AuthorContext)
 			r.Get("/", env.AuthorGet)
-			r.With(EnsureValidToken(), env.AdminEndpoint).Put("/", env.AuthorPut)
+			r.With(EnsureValidToken(), env.RequiresAdmin).Put("/", env.AuthorPut)
 		})
 	})
 

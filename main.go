@@ -38,8 +38,6 @@ func main() {
 	}
 	log.Printf("Database connected.")
 
-	// env := sw.GenerateEnv(db)
-
 	r := blog.NewRouter(db)
 
 	log.Print("Server started")
