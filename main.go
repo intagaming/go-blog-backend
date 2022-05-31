@@ -13,6 +13,11 @@ import (
 func main() {
 	log.Printf("Initializing...")
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
 	db, err := sql.Open("mysql", os.Getenv("DSN"))
 	if err != nil {
 		log.Fatal(err)
@@ -27,5 +32,5 @@ func main() {
 
 	log.Print("Server started")
 
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":"+port, r)
 }
