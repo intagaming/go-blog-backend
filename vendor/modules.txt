@@ -1,0 +1,34 @@
+# github.com/auth0/go-jwt-middleware/v2 v2.0.1
+## explicit; go 1.17
+github.com/auth0/go-jwt-middleware/v2
+github.com/auth0/go-jwt-middleware/v2/internal/oidc
+github.com/auth0/go-jwt-middleware/v2/jwks
+github.com/auth0/go-jwt-middleware/v2/validator
+# github.com/davecgh/go-spew v1.1.1
+## explicit
+# github.com/go-chi/chi/v5 v5.0.7
+## explicit; go 1.14
+github.com/go-chi/chi/v5
+github.com/go-chi/chi/v5/middleware
+# github.com/go-chi/cors v1.2.1
+## explicit; go 1.14
+github.com/go-chi/cors
+# github.com/go-chi/render v1.0.1
+## explicit
+github.com/go-chi/render
+# github.com/go-sql-driver/mysql v1.6.0
+## explicit; go 1.10
+github.com/go-sql-driver/mysql
+# github.com/pkg/errors v0.9.1
+## explicit
+github.com/pkg/errors
+# golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
+## explicit; go 1.17
+golang.org/x/crypto/ed25519
+golang.org/x/crypto/pbkdf2
+# gopkg.in/square/go-jose.v2 v2.6.0
+## explicit
+gopkg.in/square/go-jose.v2
+gopkg.in/square/go-jose.v2/cipher
+gopkg.in/square/go-jose.v2/json
+gopkg.in/square/go-jose.v2/jwt
