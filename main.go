@@ -30,7 +30,7 @@ func main() {
 
 	r := blog.NewRouter(db)
 
-	log.Print("Server started")
+	log.Print("Server started on port " + port)
 
 	http.ListenAndServe(":"+port, r)
 }
