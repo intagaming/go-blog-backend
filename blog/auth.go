@@ -138,24 +138,6 @@ func (env *Env) RequiresAuthorOfPost() func(next http.Handler) http.Handler {
 	}
 }
 
-// RequiresAuthorOfPage requires the request to be authenticated as the author
-// of the subjected page.
-func (env *Env) RequiresAuthorOfPage() func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			page := r.Context().Value(pageCtxKey{}).(*models.Page)
-			author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
-
-			if !page.IsAuthor(author) && !IsAdmin(r) {
-				render.Render(w, r, ErrForbidden(errors.New("you must be the among the authors of the page in order to access this resource")))
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
 // IsAdmin checks if the request is authenticated as an admin.
 func IsAdmin(r *http.Request) bool {
 	token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)

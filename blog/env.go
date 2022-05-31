@@ -8,14 +8,12 @@ import (
 
 type Env struct {
 	posts   models.PostModel
-	pages   models.PageModel
 	authors models.AuthorModel
 }
 
 func GenerateEnv(db *sql.DB) *Env {
 	return &Env{
 		posts:   models.PostModel{DB: db},
-		pages:   models.PageModel{DB: db},
 		authors: models.AuthorModel{DB: db},
 	}
 }
