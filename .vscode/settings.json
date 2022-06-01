@@ -1,3 +1,13 @@
 {
-  "cSpell.words": ["godotenv", "hxann", "openapi"]
+  "cSpell.words": [
+    "felixge",
+    "godotenv",
+    "httpsnoop",
+    "hxann",
+    "Infof",
+    "Infow",
+    "jwks",
+    "jwtmiddleware",
+    "openapi"
+  ]
 }
