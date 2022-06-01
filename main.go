@@ -2,35 +2,39 @@ package main
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"go.uber.org/zap"
 	"hxann.com/blog/blog"
 )
 
 func main() {
-	log.Printf("Initializing...")
+	logger, _ := zap.NewProduction()
+	defer logger.Sync() // flushes buffer, if any
+	sugar := logger.Sugar()
+
+	sugar.Info("Initializing...")
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("$PORT must be set")
+		sugar.Fatal("$PORT must be set")
 	}
 
 	db, err := sql.Open("mysql", os.Getenv("DSN"))
 	if err != nil {
-		log.Fatal(err)
+		sugar.Fatal(err)
 	}
 	err = db.Ping()
 	if err != nil {
-		log.Fatal(err)
+		sugar.Fatal(err)
 	}
-	log.Printf("Database connected.")
+	sugar.Info("Database connected.")
 
-	r := blog.NewRouter(db)
+	r := blog.NewRouter(sugar, db)
 
-	log.Print("Server started on port " + port)
+	sugar.Info("Server started on port " + port)
 
 	http.ListenAndServe(":"+port, r)
 }

@@ -8,9 +8,12 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
+	"go.uber.org/zap"
 )
 
-func NewRouter(db *sql.DB) *chi.Mux {
+func NewRouter(sugar *zap.SugaredLogger, db *sql.DB) *chi.Mux {
+	env := GenerateEnv(sugar, db)
+
 	r := chi.NewRouter()
 	// r.Use(middleware.RequestID)
 	r.Use(cors.Handler(cors.Options{
@@ -20,11 +23,9 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-	r.Use(middleware.Logger)
+	r.Use(env.logRequestHandler)
 	r.Use(middleware.Recoverer)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
-
-	env := GenerateEnv(db)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hello world"))
@@ -37,7 +38,7 @@ func NewRouter(db *sql.DB) *chi.Mux {
 
 		// Authenticated endpoints for Authors
 		r.Route("/", func(r chi.Router) {
-			r.Use(EnsureValidToken())
+			r.Use(env.EnsureValidToken())
 			r.Use(env.RequiresAuthor())
 
 			r.Post("/", env.PostsPost)
@@ -53,7 +54,7 @@ func NewRouter(db *sql.DB) *chi.Mux {
 
 	r.Route("/authors", func(r chi.Router) {
 		r.Route("/me", func(r chi.Router) {
-			r.Use(EnsureValidToken())
+			r.Use(env.EnsureValidToken())
 			r.Use(env.RequiresAuthor())
 
 			r.Get("/", env.AuthorsMeGet)
@@ -63,7 +64,7 @@ func NewRouter(db *sql.DB) *chi.Mux {
 		r.Route("/{user_id}", func(r chi.Router) {
 			r.Use(env.AuthorContext)
 			r.Get("/", env.AuthorGet)
-			r.With(EnsureValidToken(), env.RequiresAdmin).Put("/", env.AuthorPut)
+			r.With(env.EnsureValidToken(), env.RequiresAdmin).Put("/", env.AuthorPut)
 		})
 	})
 

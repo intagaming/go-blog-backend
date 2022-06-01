@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -30,10 +29,10 @@ func (c CustomClaims) Validate(ctx context.Context) error {
 }
 
 // EnsureValidToken is a middleware that will check the validity of our JWT.
-func EnsureValidToken() func(next http.Handler) http.Handler {
+func (env *Env) EnsureValidToken() func(next http.Handler) http.Handler {
 	issuerURL, err := url.Parse("https://" + os.Getenv("AUTH0_DOMAIN") + "/")
 	if err != nil {
-		log.Fatalf("Failed to parse the issuer url: %v", err)
+		env.sugar.Fatalf("failed to parse the issuer url: %v", err)
 	}
 
 	provider := jwks.NewCachingProvider(issuerURL, 5*time.Minute)
@@ -51,11 +50,11 @@ func EnsureValidToken() func(next http.Handler) http.Handler {
 		validator.WithAllowedClockSkew(time.Minute),
 	)
 	if err != nil {
-		log.Fatalf("Failed to set up the jwt validator")
+		env.sugar.Fatalf("failed to set up the jwt validator")
 	}
 
 	errorHandler := func(w http.ResponseWriter, r *http.Request, err error) {
-		log.Printf("Encountered error while validating JWT: %v", err)
+		env.sugar.Infof("encountered error while validating JWT: %v", err)
 
 		render.Render(w, r, ErrUnauthorized(errors.New("failed to validate JWT")))
 	}
