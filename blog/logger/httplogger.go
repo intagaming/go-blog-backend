@@ -1,4 +1,4 @@
-package blog
+package logger
 
 import (
 	"net/http"
@@ -6,7 +6,12 @@ import (
 	"time"
 
 	"github.com/felixge/httpsnoop"
+	"go.uber.org/zap"
 )
+
+type HTTPLogger struct {
+	Sugar *zap.SugaredLogger
+}
 
 // LogReqInfo describes the HTTP request.
 type HTTPReqInfo struct {
@@ -51,7 +56,7 @@ func requestGetRemoteAddress(r *http.Request) string {
 	return hdrRealIP
 }
 
-func (env *Env) logRequestHandler(h http.Handler) http.Handler {
+func (logger *HTTPLogger) LogRequestHandler(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ri := &HTTPReqInfo{
 			Method:    r.Method,
@@ -69,7 +74,7 @@ func (env *Env) logRequestHandler(h http.Handler) http.Handler {
 		ri.Code = m.Code
 		ri.Size = m.Written
 		ri.Duration = m.Duration
-		env.logHTTPReq(ri)
+		logger.LogHTTPReq(ri)
 	}
 
 	// http.HandlerFunc wraps a function so that it
@@ -77,8 +82,8 @@ func (env *Env) logRequestHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (env *Env) logHTTPReq(ri *HTTPReqInfo) {
-	sugar := env.sugar
+func (logger *HTTPLogger) LogHTTPReq(ri *HTTPReqInfo) {
+	sugar := logger.Sugar
 	if ri.Referer != "" {
 		sugar = sugar.With("referer", ri.Referer)
 	}

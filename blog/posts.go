@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/go-sql-driver/mysql"
 	"hxann.com/blog/blog/constants"
+	"hxann.com/blog/blog/resp"
 	"hxann.com/blog/models"
 )
 
@@ -20,13 +21,13 @@ func (env *Env) PostsGet(w http.ResponseWriter, r *http.Request) {
 	modelPosts, err := env.posts.All()
 
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 
 	postsResp, err := NewPostListResponse(modelPosts, env)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 
@@ -38,7 +39,7 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 
 	data := &PostRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, ErrInvalidRequest(err))
+		render.Render(w, r, resp.ErrInvalidRequest(err))
 		return
 	}
 
@@ -47,7 +48,7 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 	// Check required fields
 	if post.Slug == "" || post.Title == "" || post.Excerpt == "" ||
 		post.Content == "" {
-		render.Render(w, r, ErrInvalidRequest(errors.New("some of the required fields are not present. Required fields: slug, title, excerpt, content")))
+		render.Render(w, r, resp.ErrInvalidRequest(errors.New("some of the required fields are not present. Required fields: slug, title, excerpt, content")))
 		return
 	}
 
@@ -55,10 +56,10 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 	authors, missingAuthorId, err := AuthorIdsToAuthors(authorIds, env)
 	if err != nil {
 		if missingAuthorId != nil {
-			render.Render(w, r, ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
+			render.Render(w, r, resp.ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
 			return
 		}
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 	for _, dbAuthor := range authors {
@@ -72,11 +73,11 @@ func (env *Env) PostsPost(w http.ResponseWriter, r *http.Request) {
 	if err := env.posts.Add(post); err != nil {
 		if driverErr, ok := err.(*mysql.MySQLError); ok {
 			if driverErr.Number == 1062 {
-				render.Render(w, r, ErrDuplicate(err))
+				render.Render(w, r, resp.ErrDuplicate(err))
 				return
 			}
 		}
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 
@@ -106,14 +107,14 @@ func (env *Env) PostContext(next http.Handler) http.Handler {
 		if slug := chi.URLParam(r, "slug"); slug != "" {
 			post, err = env.posts.Get(slug)
 		} else { // slug empty
-			render.Render(w, r, ErrInvalidRequest(errors.New("slug required")))
+			render.Render(w, r, resp.ErrInvalidRequest(errors.New("slug required")))
 		}
 		if err == sql.ErrNoRows {
-			render.Render(w, r, ErrNotFound)
+			render.Render(w, r, resp.ErrNotFound)
 			return
 		}
 		if err != nil {
-			render.Render(w, r, ErrInternal(err))
+			render.Render(w, r, resp.ErrInternal(err))
 			panic(err)
 		}
 		ctx := context.WithValue(r.Context(), postCtxKey{}, post)
@@ -124,13 +125,13 @@ func (env *Env) PostContext(next http.Handler) http.Handler {
 func (env *Env) PostGet(w http.ResponseWriter, r *http.Request) {
 	post := r.Context().Value(postCtxKey{}).(*models.Post)
 
-	resp, err := NewPostResponse(post, env)
+	postResp, err := NewPostResponse(post, env)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 
-	render.Render(w, r, resp)
+	render.Render(w, r, postResp)
 }
 
 func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
@@ -140,7 +141,7 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 
 	data := &PostRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, ErrInvalidRequest(err))
+		render.Render(w, r, resp.ErrInvalidRequest(err))
 		return
 	}
 
@@ -169,7 +170,7 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 
 	// if not the original author or blog's admin, they can't change authors
 	if !IsAdmin(r) && author.UserId != post.Author.UserId && (data.Author != "" || data.Authors != nil) {
-		render.Render(w, r, ErrForbidden(errors.New("you must be the original author in order to change authors")))
+		render.Render(w, r, resp.ErrForbidden(errors.New("you must be the original author in order to change authors")))
 		return
 	}
 
@@ -179,7 +180,7 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 		// The original author is making another author the original author.
 		newOriginalAuthor, err := env.authors.Get(data.Author)
 		if err != nil {
-			render.Render(w, r, ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", data.Author)))
+			render.Render(w, r, resp.ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", data.Author)))
 			return
 		}
 		newPost.Author = newOriginalAuthor
@@ -191,10 +192,10 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 		authors, missingAuthorId, err := AuthorIdsToAuthors(data.Authors, env)
 		if err != nil {
 			if missingAuthorId != nil {
-				render.Render(w, r, ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
+				render.Render(w, r, resp.ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
 				return
 			}
-			render.Render(w, r, ErrInternal(err))
+			render.Render(w, r, resp.ErrInternal(err))
 			panic(err)
 		}
 
@@ -203,17 +204,17 @@ func (env *Env) PostPut(w http.ResponseWriter, r *http.Request) {
 
 	err := env.posts.Update(newPost)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 
-	resp, err := NewPostResponse(newPost, env)
+	postResp, err := NewPostResponse(newPost, env)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 
-	render.Render(w, r, resp)
+	render.Render(w, r, postResp)
 }
 
 func (env *Env) PostDelete(w http.ResponseWriter, r *http.Request) {
@@ -221,7 +222,7 @@ func (env *Env) PostDelete(w http.ResponseWriter, r *http.Request) {
 
 	err := env.posts.Delete(post.Slug)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 

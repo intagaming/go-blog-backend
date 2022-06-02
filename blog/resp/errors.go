@@ -1,4 +1,4 @@
-package blog
+package resp
 
 import (
 	"net/http"
@@ -25,6 +25,7 @@ func ErrInternal(err error) render.Renderer {
 	}
 }
 
+// TODO: rename to ErrBadRequest
 func ErrInvalidRequest(err error) render.Renderer {
 	return &ErrorResponse{
 		Err:     err,
@@ -66,6 +67,14 @@ func ErrUnauthorized(err error) render.Renderer {
 	return &ErrorResponse{
 		Err:     err,
 		Status:  http.StatusUnauthorized,
+		Message: err.Error(),
+	}
+}
+
+func ErrTooManyRequest(err error) render.Renderer {
+	return &ErrorResponse{
+		Err:     err,
+		Status:  http.StatusTooManyRequests,
 		Message: err.Error(),
 	}
 }

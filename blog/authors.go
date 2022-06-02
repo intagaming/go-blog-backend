@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"hxann.com/blog/blog/resp"
 	"hxann.com/blog/models"
 )
 
@@ -21,14 +22,14 @@ func (env *Env) AuthorContext(next http.Handler) http.Handler {
 		if userId := chi.URLParam(r, "user_id"); userId != "" {
 			author, err = env.authors.Get(userId)
 		} else {
-			render.Render(w, r, ErrInvalidRequest(errors.New("user_id required")))
+			render.Render(w, r, resp.ErrInvalidRequest(errors.New("user_id required")))
 		}
 		if err == sql.ErrNoRows {
-			render.Render(w, r, ErrNotFound)
+			render.Render(w, r, resp.ErrNotFound)
 			return
 		}
 		if err != nil {
-			render.Render(w, r, ErrInternal(err))
+			render.Render(w, r, resp.ErrInternal(err))
 			panic(err)
 		}
 		ctx := context.WithValue(r.Context(), authorCtxKey{}, author)
@@ -49,7 +50,7 @@ func (env *Env) AuthorPut(w http.ResponseWriter, r *http.Request) {
 
 	data := &AuthorRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, ErrInvalidRequest(err))
+		render.Render(w, r, resp.ErrInvalidRequest(err))
 		return
 	}
 
@@ -71,7 +72,7 @@ func (env *Env) AuthorPut(w http.ResponseWriter, r *http.Request) {
 
 	err := env.authors.Update(newAuthor)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 
@@ -93,7 +94,7 @@ func (env *Env) AuthorsMePut(w http.ResponseWriter, r *http.Request) {
 
 	data := &AuthorRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, ErrInvalidRequest(err))
+		render.Render(w, r, resp.ErrInvalidRequest(err))
 		return
 	}
 
@@ -115,7 +116,7 @@ func (env *Env) AuthorsMePut(w http.ResponseWriter, r *http.Request) {
 
 	err := env.authors.Update(newAuthor)
 	if err != nil {
-		render.Render(w, r, ErrInternal(err))
+		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
 	}
 

@@ -8,14 +8,20 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
+	"hxann.com/blog/blog/auth"
+	"hxann.com/blog/blog/logger"
 )
 
-func NewRouter(sugar *zap.SugaredLogger, db *sql.DB) *chi.Mux {
-	env := GenerateEnv(sugar, db)
+func NewRouter(sugar *zap.SugaredLogger, db *sql.DB, redisClient *redis.Client) *chi.Mux {
+	env := GenerateEnv(sugar, db, redisClient)
+	httpLogger := &logger.HTTPLogger{
+		Sugar: sugar,
+	}
+	ensureValidToken := auth.EnsureValidToken(sugar)
 
 	r := chi.NewRouter()
-	// r.Use(middleware.RequestID)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -23,7 +29,7 @@ func NewRouter(sugar *zap.SugaredLogger, db *sql.DB) *chi.Mux {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-	r.Use(env.logRequestHandler)
+	r.Use(httpLogger.LogRequestHandler)
 	r.Use(middleware.Recoverer)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
@@ -38,7 +44,8 @@ func NewRouter(sugar *zap.SugaredLogger, db *sql.DB) *chi.Mux {
 
 		// Authenticated endpoints for Authors
 		r.Route("/", func(r chi.Router) {
-			r.Use(env.EnsureValidToken())
+			r.Use(ensureValidToken)
+			r.Use(env.AuthorizedRateLimiter)
 			r.Use(env.RequiresAuthor())
 
 			r.Post("/", env.PostsPost)
@@ -54,7 +61,8 @@ func NewRouter(sugar *zap.SugaredLogger, db *sql.DB) *chi.Mux {
 
 	r.Route("/authors", func(r chi.Router) {
 		r.Route("/me", func(r chi.Router) {
-			r.Use(env.EnsureValidToken())
+			r.Use(ensureValidToken)
+			r.Use(env.AuthorizedRateLimiter)
 			r.Use(env.RequiresAuthor())
 
 			r.Get("/", env.AuthorsMeGet)
@@ -64,7 +72,7 @@ func NewRouter(sugar *zap.SugaredLogger, db *sql.DB) *chi.Mux {
 		r.Route("/{user_id}", func(r chi.Router) {
 			r.Use(env.AuthorContext)
 			r.Get("/", env.AuthorGet)
-			r.With(env.EnsureValidToken(), env.RequiresAdmin).Put("/", env.AuthorPut)
+			r.With(ensureValidToken, env.AuthorizedRateLimiter, env.RequiresAdmin).Put("/", env.AuthorPut)
 		})
 	})
 

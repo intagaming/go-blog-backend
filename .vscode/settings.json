@@ -8,6 +8,7 @@
     "Infow",
     "jwks",
     "jwtmiddleware",
-    "openapi"
+    "openapi",
+    "Wrapf"
   ]
 }
