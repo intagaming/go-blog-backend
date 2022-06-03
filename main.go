@@ -36,9 +36,9 @@ func main() {
 	sugar.Info("Database connected.")
 
 	// Initialize Redis client
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		sugar.Fatal("$REDIS_ADDR must be set")
+	redisUrl := os.Getenv("REDIS_URL")
+	if redisUrl == "" {
+		sugar.Fatal("$REDIS_URL must be set")
 	}
 
 	redisPassword := os.Getenv("REDIS_PASSWORD")
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
+		Addr:     redisUrl,
 		Password: redisPassword,
 		DB:       redisDb,
 	})
