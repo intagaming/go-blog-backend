@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
@@ -40,25 +39,11 @@ func main() {
 	if redisUrl == "" {
 		sugar.Fatal("$REDIS_URL must be set")
 	}
-
-	redisPassword := os.Getenv("REDIS_PASSWORD")
-
-	var redisDb int
-	if redisDbStr := os.Getenv("REDIS_DB"); redisDbStr != "" {
-		redisDbInt, err := strconv.Atoi(redisDbStr)
-		if err != nil {
-			sugar.Fatal("cannot parse $REDIS_DB to int")
-		}
-		redisDb = redisDbInt
-	} else {
-		redisDb = 0
+	redisOpt, err := redis.ParseURL(redisUrl)
+	if err != nil {
+		sugar.Fatal("couldn't parse $REDIS_URL")
 	}
-
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     redisUrl,
-		Password: redisPassword,
-		DB:       redisDb,
-	})
+	redisClient := redis.NewClient(redisOpt)
 
 	// Create router
 	r := api.NewRouter(sugar, db, redisClient)
