@@ -43,7 +43,7 @@ func (p *Posts) PostsPost(w http.ResponseWriter, r *http.Request) {
 
 	data := &PostRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, resp.ErrInvalidRequest(err))
+		render.Render(w, r, resp.ErrBadRequest(err))
 		return
 	}
 
@@ -52,7 +52,7 @@ func (p *Posts) PostsPost(w http.ResponseWriter, r *http.Request) {
 	// Check required fields
 	if post.Slug == "" || post.Title == "" || post.Excerpt == "" ||
 		post.Content == "" {
-		render.Render(w, r, resp.ErrInvalidRequest(errors.New("some of the required fields are not present. Required fields: slug, title, excerpt, content")))
+		render.Render(w, r, resp.ErrBadRequest(errors.New("some of the required fields are not present. Required fields: slug, title, excerpt, content")))
 		return
 	}
 
@@ -120,7 +120,7 @@ func (p *Posts) PostPut(w http.ResponseWriter, r *http.Request) {
 
 	data := &PostRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, resp.ErrInvalidRequest(err))
+		render.Render(w, r, resp.ErrBadRequest(err))
 		return
 	}
 

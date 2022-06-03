@@ -27,7 +27,7 @@ func (a *Authors) AuthorPut(w http.ResponseWriter, r *http.Request) {
 
 	data := &AuthorRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, resp.ErrInvalidRequest(err))
+		render.Render(w, r, resp.ErrBadRequest(err))
 		return
 	}
 
@@ -71,7 +71,7 @@ func (a *Authors) AuthorsMePut(w http.ResponseWriter, r *http.Request) {
 
 	data := &AuthorRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, resp.ErrInvalidRequest(err))
+		render.Render(w, r, resp.ErrBadRequest(err))
 		return
 	}
 

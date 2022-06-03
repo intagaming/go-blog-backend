@@ -26,8 +26,7 @@ func ErrInternal(err error) render.Renderer {
 	}
 }
 
-// TODO: rename to ErrBadRequest
-func ErrInvalidRequest(err error) render.Renderer {
+func ErrBadRequest(err error) render.Renderer {
 	return &ErrorResponse{
 		Err:     err,
 		Status:  http.StatusBadRequest,

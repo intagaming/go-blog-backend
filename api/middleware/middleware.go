@@ -109,7 +109,7 @@ func (m *Middleware) PostContext(next http.Handler) http.Handler {
 		if slug := chi.URLParam(r, "slug"); slug != "" {
 			post, err = m.Posts.Get(slug)
 		} else { // slug empty
-			render.Render(w, r, resp.ErrInvalidRequest(errors.New("slug required")))
+			render.Render(w, r, resp.ErrBadRequest(errors.New("slug required")))
 		}
 		if err == sql.ErrNoRows {
 			render.Render(w, r, resp.ErrNotFound)
@@ -132,7 +132,7 @@ func (m *Middleware) AuthorContext(next http.Handler) http.Handler {
 		if userId := chi.URLParam(r, "user_id"); userId != "" {
 			author, err = m.Authors.Get(userId)
 		} else {
-			render.Render(w, r, resp.ErrInvalidRequest(errors.New("user_id required")))
+			render.Render(w, r, resp.ErrBadRequest(errors.New("user_id required")))
 		}
 		if err == sql.ErrNoRows {
 			render.Render(w, r, resp.ErrNotFound)

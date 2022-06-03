@@ -101,7 +101,7 @@ func (h *httpRateLimiterHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	key, err := h.config.Extractor.Extract(r)
 	if err != nil {
 		h.sugar.Debugf("failed to collect rate limiting key from request: %v", err)
-		render.Render(w, r, resp.ErrInvalidRequest(fmt.Errorf("failed to collect rate limiting key from request: %w", err)))
+		render.Render(w, r, resp.ErrBadRequest(fmt.Errorf("failed to collect rate limiting key from request: %w", err)))
 		return
 	}
 
