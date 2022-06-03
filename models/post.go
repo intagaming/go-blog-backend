@@ -30,7 +30,6 @@ func (post *Post) IsAuthor(author *Author) bool {
 	return false
 }
 
-// TODO: make DB private
 type PostModel struct {
 	DB *sql.DB
 }
