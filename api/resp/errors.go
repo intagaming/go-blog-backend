@@ -1,3 +1,4 @@
+// Package resp describes HTTP responses in the form of Chi's render.Renderer.
 package resp
 
 import (

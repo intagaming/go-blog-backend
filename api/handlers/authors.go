@@ -1,52 +1,29 @@
-package blog
+package handlers
 
 import (
-	"context"
-	"database/sql"
 	"errors"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"hxann.com/blog/blog/resp"
+	"hxann.com/blog/api/middleware"
+	"hxann.com/blog/api/resp"
 	"hxann.com/blog/models"
 )
 
-type authorCtxKey struct{}
-
-func (env *Env) AuthorContext(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var author *models.Author
-		var err error
-
-		if userId := chi.URLParam(r, "user_id"); userId != "" {
-			author, err = env.authors.Get(userId)
-		} else {
-			render.Render(w, r, resp.ErrInvalidRequest(errors.New("user_id required")))
-		}
-		if err == sql.ErrNoRows {
-			render.Render(w, r, resp.ErrNotFound)
-			return
-		}
-		if err != nil {
-			render.Render(w, r, resp.ErrInternal(err))
-			panic(err)
-		}
-		ctx := context.WithValue(r.Context(), authorCtxKey{}, author)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+type Authors struct {
+	authors *models.AuthorModel
 }
 
-func (env *Env) AuthorGet(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(authorCtxKey{}).(*models.Author)
+func (_ *Authors) AuthorGet(w http.ResponseWriter, r *http.Request) {
+	author := r.Context().Value(middleware.AuthorCtxKey{}).(*models.Author)
 
 	resp := NewAuthorResponse(author)
 
 	render.Render(w, r, resp)
 }
 
-func (env *Env) AuthorPut(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(authorCtxKey{}).(*models.Author)
+func (a *Authors) AuthorPut(w http.ResponseWriter, r *http.Request) {
+	author := r.Context().Value(middleware.AuthorCtxKey{}).(*models.Author)
 
 	data := &AuthorRequest{}
 	if err := render.Bind(r, data); err != nil {
@@ -70,7 +47,7 @@ func (env *Env) AuthorPut(w http.ResponseWriter, r *http.Request) {
 		newAuthor.Bio = author.Bio
 	}
 
-	err := env.authors.Update(newAuthor)
+	err := a.authors.Update(newAuthor)
 	if err != nil {
 		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
@@ -81,16 +58,16 @@ func (env *Env) AuthorPut(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, resp)
 }
 
-func (env *Env) AuthorsMeGet(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
+func (a *Authors) AuthorsMeGet(w http.ResponseWriter, r *http.Request) {
+	author := r.Context().Value(middleware.RequestAuthorCtxKey{}).(*models.Author)
 
 	resp := NewAuthorResponse(author)
 
 	render.Render(w, r, resp)
 }
 
-func (env *Env) AuthorsMePut(w http.ResponseWriter, r *http.Request) {
-	author := r.Context().Value(requestAuthorCtxKey{}).(*models.Author)
+func (a *Authors) AuthorsMePut(w http.ResponseWriter, r *http.Request) {
+	author := r.Context().Value(middleware.RequestAuthorCtxKey{}).(*models.Author)
 
 	data := &AuthorRequest{}
 	if err := render.Bind(r, data); err != nil {
@@ -114,7 +91,7 @@ func (env *Env) AuthorsMePut(w http.ResponseWriter, r *http.Request) {
 		newAuthor.Bio = author.Bio
 	}
 
-	err := env.authors.Update(newAuthor)
+	err := a.authors.Update(newAuthor)
 	if err != nil {
 		render.Render(w, r, resp.ErrInternal(err))
 		panic(err)
@@ -157,4 +134,10 @@ func NewAuthorListResponse(authors []*models.Author) []*AuthorResponse {
 		list = append(list, NewAuthorResponse(author))
 	}
 	return list
+}
+
+func NewAuthors(authors *models.AuthorModel) *Authors {
+	return &Authors{
+		authors: authors,
+	}
 }

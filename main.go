@@ -9,7 +9,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
-	"hxann.com/blog/blog"
+	"hxann.com/blog/api"
 )
 
 func main() {
@@ -61,7 +61,7 @@ func main() {
 	})
 
 	// Create router
-	r := blog.NewRouter(sugar, db, redisClient)
+	r := api.NewRouter(sugar, db, redisClient)
 
 	sugar.Info("Server started on port " + port)
 	http.ListenAndServe(":"+port, r)

@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/render"
 	"go.uber.org/zap"
-	"hxann.com/blog/blog/resp"
+	"hxann.com/blog/api/resp"
 )
 
 var (

@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"hxann.com/blog/blog/constants"
+	"hxann.com/blog/constants"
 )
 
 func CurrentTime() string {

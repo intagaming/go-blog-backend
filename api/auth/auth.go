@@ -14,7 +14,7 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-chi/render"
 	"go.uber.org/zap"
-	"hxann.com/blog/blog/resp"
+	"hxann.com/blog/api/resp"
 )
 
 // CustomClaims contains custom data we want from the token.
