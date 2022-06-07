@@ -14,7 +14,7 @@ type Post struct {
 	PublishedAt string    `json:"published_at,omitempty"`
 	ModifiedAt  string    `json:"modified_at"`
 	Author      *Author   `json:"author"`
-	Authors     []*Author `json:"authors,omitempty"`
+	Co_Authors  []*Author `json:"co_authors,omitempty"`
 	CoverUrl    *string   `json:"cover_url"`
 }
 
@@ -22,7 +22,7 @@ func (post *Post) IsAuthor(author *Author) bool {
 	if post.Author.UserId == author.UserId {
 		return true
 	}
-	for _, postAuthor := range post.Authors {
+	for _, postAuthor := range post.Co_Authors {
 		if postAuthor.UserId == author.UserId {
 			return true
 		}
@@ -206,11 +206,7 @@ func (m PostModel) Add(post *Post) error {
 	}
 	defer addAuthorStmt.Close()
 
-	for _, author := range post.Authors {
-		if author.UserId == post.Author.UserId {
-			continue
-		}
-
+	for _, author := range post.Co_Authors {
 		_, err := addAuthorStmt.Exec(post.Slug, author.UserId, 0)
 		if err != nil {
 			return err
@@ -305,7 +301,8 @@ func (m PostModel) Update(newPost *Post) error {
 	}
 	defer addAuthorStmt.Close()
 
-	for _, author := range newPost.Authors {
+	for _, author := range newPost.Co_Authors {
+		// In case the original author is in Co_Authors slice, we ignore.
 		if author.UserId == newPost.Author.UserId {
 			continue
 		}
@@ -381,7 +378,7 @@ func (m PostModel) FillAuthors(post *Post) error {
 	}
 	defer rows.Close()
 
-	var authors []*Author
+	var co_authors []*Author
 	for rows.Next() {
 		var author Author
 		var isOriginal bool
@@ -389,14 +386,16 @@ func (m PostModel) FillAuthors(post *Post) error {
 		if err != nil {
 			return err
 		}
-		authors = append(authors, &author)
 
 		if isOriginal {
 			post.Author = &author
+			continue
 		}
+
+		co_authors = append(co_authors, &author)
 	}
 
-	post.Authors = authors
+	post.Co_Authors = co_authors
 	return nil
 }
 

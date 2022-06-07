@@ -14,7 +14,7 @@ type Authors struct {
 	authors *models.AuthorModel
 }
 
-func (_ *Authors) AuthorGet(w http.ResponseWriter, r *http.Request) {
+func (*Authors) AuthorGet(w http.ResponseWriter, r *http.Request) {
 	author := r.Context().Value(middleware.AuthorCtxKey{}).(*models.Author)
 
 	resp := NewAuthorResponse(author)

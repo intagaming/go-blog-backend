@@ -15,12 +15,12 @@ type AuthorModel struct {
 	DB *sql.DB
 }
 
-func (m AuthorModel) OfPost(postSlug string) ([]*Author, error) {
+func (m AuthorModel) CoAuthorsOfPost(postSlug string) ([]*Author, error) {
 	rows, err := m.DB.Query(`
 		SELECT user_id, full_name, email, bio
 		FROM authors
 		INNER JOIN posts_authors ON posts_authors.author_user_id = authors.user_id
-		WHERE posts_authors.post_slug = ?
+		WHERE posts_authors.post_slug = ? AND posts_authors.is_original = 0
 	`, postSlug)
 	if err != nil {
 		return nil, err

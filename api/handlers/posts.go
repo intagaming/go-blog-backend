@@ -56,7 +56,7 @@ func (p *Posts) PostsPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorIds := append(data.Authors, author.UserId)
+	authorIds := append(data.Co_Authors, author.UserId)
 	authors, missingAuthorId, err := p.AuthorIdsToAuthors(authorIds)
 	if err != nil {
 		if missingAuthorId != nil {
@@ -70,7 +70,7 @@ func (p *Posts) PostsPost(w http.ResponseWriter, r *http.Request) {
 		if dbAuthor.UserId == author.UserId {
 			post.Author = dbAuthor
 		} else {
-			post.Authors = append(post.Authors, dbAuthor)
+			post.Co_Authors = append(post.Co_Authors, dbAuthor)
 		}
 	}
 
@@ -148,7 +148,7 @@ func (p *Posts) PostPut(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if not the original author or blog's admin, they can't change authors
-	if !auth.IsAdmin(r) && author.UserId != post.Author.UserId && (data.Author != "" || data.Authors != nil) {
+	if !auth.IsAdmin(r) && author.UserId != post.Author.UserId && (data.Author != "" || data.Co_Authors != nil) {
 		render.Render(w, r, resp.ErrForbidden(errors.New("you must be the original author in order to change authors")))
 		return
 	}
@@ -165,10 +165,10 @@ func (p *Posts) PostPut(w http.ResponseWriter, r *http.Request) {
 		newPost.Author = newOriginalAuthor
 	}
 
-	if data.Authors == nil {
-		newPost.Authors = post.Authors
+	if data.Co_Authors == nil {
+		newPost.Co_Authors = post.Co_Authors
 	} else {
-		authors, missingAuthorId, err := p.AuthorIdsToAuthors(data.Authors)
+		authors, missingAuthorId, err := p.AuthorIdsToAuthors(data.Co_Authors)
 		if err != nil {
 			if missingAuthorId != nil {
 				render.Render(w, r, resp.ErrNotFoundCustom(fmt.Errorf("couldn't find author with user_id of %s", *missingAuthorId)))
@@ -178,7 +178,7 @@ func (p *Posts) PostPut(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 
-		newPost.Authors = authors
+		newPost.Co_Authors = authors
 	}
 
 	err := p.posts.Update(newPost)
@@ -210,9 +210,9 @@ func (p *Posts) PostDelete(w http.ResponseWriter, r *http.Request) {
 
 type PostRequest struct {
 	*models.Post
-	Published *bool    `json:"published"`
-	Author    string   `json:"author"`
-	Authors   []string `json:"authors"`
+	Published  *bool    `json:"published"`
+	Author     string   `json:"author"`
+	Co_Authors []string `json:"co_authors"`
 }
 
 func (pr *PostRequest) Bind(r *http.Request) error {
@@ -236,7 +236,7 @@ func (pr *PostRequest) Bind(r *http.Request) error {
 
 type PostResponse struct {
 	*models.Post
-	Authors []*AuthorResponse `json:"authors"`
+	Co_Authors []*AuthorResponse `json:"co_authors"`
 
 	// last_post_slug and next_post_slug are nullable, semantically.
 	LastPostSlug *string `json:"last_post_slug"`
@@ -250,13 +250,14 @@ func (resp *PostResponse) Render(w http.ResponseWriter, r *http.Request) error {
 func (p *Posts) NewPostResponse(post *models.Post) (*PostResponse, error) {
 	resp := &PostResponse{Post: post}
 
-	// Fetch post's authors
-	authors, err := p.authors.OfPost(post.Slug)
-	if err != nil {
-		return nil, err
-	}
-	authorsResp := NewAuthorListResponse(authors)
-	resp.Authors = authorsResp
+	// Fetch post's co_authors
+	// co_authors, err := p.authors.CoAuthorsOfPost(post.Slug)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// co_authorsResp := NewAuthorListResponse(co_authors)
+	co_authorsResp := NewAuthorListResponse(post.Co_Authors)
+	resp.Co_Authors = co_authorsResp
 
 	// Fetch LastPostSlug & NextPostSlug
 	last, next, err := p.posts.GetLastAndNextPostSlug(post.Slug)
